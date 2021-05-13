@@ -1,0 +1,23 @@
+{
+  "one": {
+    "start-string": "foo",
+    "null-value": null,
+    "integer-number": 101
+  },
+  "two": {
+    "two-a": {
+      "non-integer-number": 101.75,
+      "number-zero": 0
+    },
+    "true-boolean": true,
+    "two-b": {
+      "false-boolean": false
+    }
+  },
+  "three": {
+    "empty-string": "",
+    "empty-object": {},
+    "empty-array": []
+  },
+  "end-string": "bar"
+}
