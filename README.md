@@ -16,16 +16,25 @@ $ jq . odd-values.json
     "null-value": null,
     "integer-number": 101
   },
-  "two": {
-    "two-a": {
-      "non-integer-number": 101.75,
-      "number-zero": 0
+  "two": [
+    {
+      "two-a": {
+        "non-integer-number": 101.75,
+        "number-zero": 0
+      },
+      "true-boolean": true,
+      "two-b": {
+        "false-boolean": false
+      }
     },
-    "true-boolean": true,
-    "two-b": {
-      "false-boolean": false
+    {
+      "two-c": {
+        "alpha-num-1": "a1",
+        "alpha-num-2": "2b",
+        "alpha-num-3": "a12b"
+      }
     }
-  },
+  ],
   "three": {
     "empty-string": "",
     "empty-object": {},
@@ -65,8 +74,10 @@ $ jqg string odd-values.json
 $ jqg 0 odd-values.json
 {
   "one.integer-number": 101,
-  "two.two-a.non-integer-number": 101.75,
-  "two.two-a.number-zero": 0
+  "two.0.two-a.non-integer-number": 101.75,
+  "two.0.two-a.number-zero": 0,
+  "two.0.true-boolean": true,
+  "two.0.two-b.false-boolean": false
 }
 
 $ jqg 'int|false' odd-values.json
@@ -80,23 +91,23 @@ $ jqg 'int|false' odd-values.json
 
 # The power of PCRE
 # - find a 0 without a preceeding number
-$ jqg '(?<!\\d)0' odd-values.json
+$ jqg -v '(?<!\d)0' odd-values.json
 {
-  "two.two-a.number-zero": 0
+  "two.0.two-a.number-zero": 0
 }
 
 # - the same or empty brackets
-$ jqg '(?<!\d)0|\[\]' odd-values.json
+$ jqg -v '(?<!\d)0|\[\]' odd-values.json
 {
-  "two.two-a.number-zero": 0,
+  "two.0.two-a.number-zero": 0,
   "three.empty-array": []
 }
 
 
 # can be used in pipelines, too
-$ curl -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/test/odd-values.json | jqg '(?<!\d)0|\[\]'
+$ curl -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/test/odd-values.json | jqg -v '(?<!\d)0|\[\]'
 {
-  "two.two-a.number-zero": 0,
+  "two.0.two-a.number-zero": 0,
   "three.empty-array": []
 }
 ```
@@ -107,7 +118,7 @@ Many more examples are provided in [jqg-examples.md](doc/jqg-examples.md).
 
 ### Prerequisites
 
-The `jqg` script is self-contained except for the need to have both `jq` and `bash` on the system somewhere; `bash` itself needs to be on your `$PATH`, but `jq` does not -- see the [documentation](doc/jqd.md) for more details.
+The `jqg` script is self-contained except for the need to have both `jq` and `bash` on the system somewhere; `bash` itself needs to be on your `$PATH`, but `jq` does not -- see the [documentation](doc/jqg.md) for more details.
 
 ### Download the Script
 

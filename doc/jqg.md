@@ -57,7 +57,7 @@ Flatten and then search JSON for the REGEX supplied, using '`.`' if not specifie
 
 ## EXAMPLES
 
-An exhaustive look at the different invocation methods as well as each command line option is provided in the [jqg-examples.md](doc/jqg-examples.md) file.
+An exhaustive look at the different invocation methods as well as each command line option is provided in the [jqg-examples.md](jqg-examples.md) file.
 
 ## EXIT STATUS
 

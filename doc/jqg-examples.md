@@ -76,16 +76,18 @@ These are the JSON files used in the unit test scripts. As such, the data in the
     "null-value": null,
     "integer-number": 101
   },
-  "two": {
-    "two-a": {
-      "non-integer-number": 101.75,
-      "number-zero": 0
-    },
-    "true-boolean": true,
-    "two-b": {
-      "false-boolean": false
+  "two": [
+    {
+      "two-a": {
+        "non-integer-number": 101.75,
+        "number-zero": 0
+      },
+      "true-boolean": true,
+      "two-b": {
+        "false-boolean": false
+      }
     }
-  },
+  ],
   "three": {
     "empty-string": "",
     "empty-object": {},
@@ -170,7 +172,7 @@ $ jqg -k tiger carnivora.json
 <summary>search values only</summary>
 
 ```json
-$ jqg tiger carnivora.json
+$ jqg -v tiger carnivora.json
 {
   "cat.domesticated.1.breed": "domestic short hair",
   "dog.1.type": "domesticated"
@@ -230,14 +232,12 @@ $ jqg feli carnivora.json
 <details>
 <summary>print just keys</summary>
 
-***NOTE TO SELF: why is the array sorted??***
-
 ```json
 $ jqg -K feli carnivora.json
 [
-  "cat.feral.2.aka",
+  "subclades.0",
   "cat.isa",
-  "subclades.0"
+  "cat.feral.2.aka"
 ]
 ```
 
@@ -264,14 +264,14 @@ $ jqg -V feli carnivora.json
 
 ```json
 $ jqg -K feral carnivora.json
-{
-  "cat.feral.0.aka",
+[
   "cat.feral.0.species",
+  "cat.feral.0.aka",
   "cat.feral.1.species",
-  "cat.feral.2.aka",
   "cat.feral.2.species",
+  "cat.feral.2.aka",
   "dog.1.feral"
-}
+]
 ```
 
 </details>
@@ -282,11 +282,11 @@ $ jqg -K feral carnivora.json
 
 ```json
 $ jqg -r -K feral carnivora.json
-cat.feral.0.aka
 cat.feral.0.species
+cat.feral.0.aka
 cat.feral.1.species
-cat.feral.2.aka
 cat.feral.2.species
+cat.feral.2.aka
 dog.1.feral
 ```
 
@@ -315,7 +315,7 @@ $ jqg feral carnivora.json
 <summary>use alternate key field separator (":")</summary>
 
 ```json
-$ jqg feral carnivora.json
+$ jqg -J feral carnivora.json
 {
   "cat:feral:0:species": "lion",
   "cat:feral:0:aka": "king of the beasts",
@@ -352,12 +352,12 @@ $ jqg -j + feral carnivora.json
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>pipe output into `jqg` from curl</summary>
+<summary>pipe output into <code>jqg</code> from curl</summary>
 
 ```json
-$ curl -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/odd-values.json | jqg '(?<!\d)0|\[\]'
+$ curl -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/test/odd-values.json | jqg -v '(?<!\d)0|\[\]'
 {
-  "two.two-a.number-zero": 0,
+  "two.0.two-a.number-zero": 0,
   "three.empty-array": []
 }
 ```
@@ -366,7 +366,7 @@ $ curl -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/odd-values.
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>use `jqg` in the middle</summary>
+<summary>use <code>jqg</code> in the middle</summary>
 
 ```json
 $  jq . carnivora.json | jqg feli | jq -S -c
@@ -451,7 +451,7 @@ $ jqg -q -S -q -c -Q mammal carnivora.json
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>set default `jqg` options (e.g. sort output)</summary>
+<summary>set default <code>jqg</code> options (e.g. sort output)</summary>
 
 ```json
 $ export JQG_OPTS="-q -S"
@@ -466,7 +466,7 @@ $ jqg mammal carnivora.json
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>override default `jqg` options (e.g. unsorted output)</summary>
+<summary>override default <code>jqg</code> options (e.g. unsorted output)</summary>
 
 ```json
 $ export JQG_OPTS="-q -S"
@@ -481,7 +481,7 @@ $ jqg -Q mammal carnivora.json
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>set default `jqg` options (e.g. join keys with '+')</summary>
+<summary>set default <code>jqg</code> options (e.g. join keys with '+')</summary>
 
 ```json
 $ export JQG_OPTS="-j +"
@@ -500,7 +500,7 @@ $ jqg feral carnivora.json
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>override default `jqg` options (e.g. join keys with ':')</summary>
+<summary>override default <code>jqg</code> options (e.g. join keys with ':')</summary>
 
 ```json
 $ export JQG_OPTS="-j +"
@@ -523,15 +523,47 @@ $ jqg -J feral carnivora.json
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>search for numeric value</summary>
+<summary>search for values with numbers</summary>
 
 ```json
 $ jqg -v '\d+' odd-values.json
 {
   "one.integer-number": 101,
-  "two.two-a.non-integer-number": 101.75,
-  "two.two-a.number-zero": 0
-}
+  "two.0.two-a.non-integer-number": 101.75,
+  "two.0.two-a.number-zero": 0,
+  "two.1.two-c.alpha-num-1": "a1",
+  "two.1.two-c.alpha-num-2": "2b",
+  "two.1.two-c.alpha-num-3": "a12b"}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>search for values that start with a number</summary>
+
+```json
+$ jqg -v '^\d+' odd-values.json
+{
+  "one.integer-number": 101,
+  "two.0.two-a.non-integer-number": 101.75,
+  "two.0.two-a.number-zero": 0,
+  "two.1.two-c.alpha-num-2": "2b"
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>search for values that end with a number</summary>
+
+```json
+$ jqg -v '\d+$' odd-values.json
+{
+  "one.integer-number": 101,
+  "two.0.two-a.non-integer-number": 101.75,
+  "two.0.two-a.number-zero": 0,
+  "two.1.two-c.alpha-num-1": "a1"
 ```
 
 </details>
@@ -544,7 +576,6 @@ $ jqg -v '\d+' odd-values.json
 $ jqg -v '^\d+$' odd-values.json
 {
   "one.integer-number": 101,
-  "two.two-a.non-integer-number": 101.75,
   "two.two-a.number-zero": 0
 }
 ```
@@ -580,10 +611,13 @@ $ jqg . odd-values.json
   "one.start-string": "foo",
   "one.null-value": null,
   "one.integer-number": 101,
-  "two.two-a.non-integer-number": 101.75,
-  "two.two-a.number-zero": 0,
-  "two.true-boolean": true,
-  "two.two-b.false-boolean": false,
+  "two.0.two-a.non-integer-number": 101.75,
+  "two.0.two-a.number-zero": 0,
+  "two.0.true-boolean": true,
+  "two.0.two-b.false-boolean": false,
+  "two.1.two-c.alpha-num-1": "a1",
+  "two.1.two-c.alpha-num-2": "2b",
+  "two.1.two-c.alpha-num-3": "a12b",
   "three.empty-string": "",
   "three.empty-object": {},
   "three.empty-array": [],
@@ -607,10 +641,13 @@ $ jqg -q -S . odd-values.json
   "three.empty-array": [],
   "three.empty-object": {},
   "three.empty-string": "",
-  "two.true-boolean": true,
-  "two.two-a.non-integer-number": 101.75,
-  "two.two-a.number-zero": 0,
-  "two.two-b.false-boolean": false
+  "two.0.true-boolean": true,
+  "two.0.two-a.non-integer-number": 101.75,
+  "two.0.two-a.number-zero": 0,
+  "two.0.two-b.false-boolean": false,
+  "two.1.two-c.alpha-num-1": "a1",
+  "two.1.two-c.alpha-num-2": "2b",
+  "two.1.two-c.alpha-num-3": "a12b"
 }
 ```
 
