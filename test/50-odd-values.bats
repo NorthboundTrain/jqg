@@ -52,8 +52,8 @@ EOF
     assert_success
     assert_output - <<EOF
 {
-  "two.true-boolean": true,
-  "two.two-b.false-boolean": false
+  "two.0.true-boolean": true,
+  "two.0.two-b.false-boolean": false
 }
 EOF
 }
@@ -67,8 +67,8 @@ EOF
     assert_output - <<EOF
 {
   "one.integer-number": 101,
-  "two.two-a.non-integer-number": 101.75,
-  "two.two-a.number-zero": 0
+  "two.0.two-a.non-integer-number": 101.75,
+  "two.0.two-a.number-zero": 0
 }
 EOF
 }

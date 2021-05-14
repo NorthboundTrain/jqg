@@ -4,16 +4,25 @@
     "null-value": null,
     "integer-number": 101
   },
-  "two": {
-    "two-a": {
-      "non-integer-number": 101.75,
-      "number-zero": 0
+  "two": [
+    {
+      "two-a": {
+        "non-integer-number": 101.75,
+        "number-zero": 0
+      },
+      "true-boolean": true,
+      "two-b": {
+        "false-boolean": false
+      }
     },
-    "true-boolean": true,
-    "two-b": {
-      "false-boolean": false
+    {
+      "two-c": {
+        "alpha-num-1": "a1",
+        "alpha-num-2": "2b",
+        "alpha-num-3": "a12b"
+      }
     }
-  },
+  ],
   "three": {
     "empty-string": "",
     "empty-object": {},
