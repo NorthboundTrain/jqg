@@ -66,13 +66,15 @@ References:
 
 ### Filter Segment #2: `[ path(.. | select(scalars|tostring), select($EMPTY_TESTS)) ] |`
 
-`path(path expression)` is a pretty unusual builtin function in `jq`. The output of `path()` depends on matches made to the Path Expression inside of the parens; when a match is made, `path()` will output each element of the object keys and array indices leading to the matched element, storing each set in an array, e.g. `[ "cat" ]`, `[ "cat", "domesticated" ]`, `[ "cat", "domesticated", 0 ]`, `[ "cat", "domesticated", 0, "petname" ]`, `[ "cat", "domesticated", 0, "breed" ]`. The `path()` function is also odd in that the results are based on what's matched by the Path Expression inside of the parens, not from the input directly. The Path Expression inside of the parens can be based on the input to `path()`, but it doesn't have to be that way; the one used here is based on the input to the filter.
+Out of everything documented here, understanding the `path()` function was the hardest thing for me. If you don't want to work that hard, it's enough to understand what comes into the filter segment, what/how the selection matches are doing, and what comes out of the filter segment; understanding exactly how what is matched turns into the output is not really needed, and instead is something that can be taken on faith.
 
-`..` recursively descends through each element of the input, one element at a time. `select()` will filter its input by some criteria; if the criteria evaluates to `false` or `null`, the item is not selected and therefor does not make it out of the filter, otherwise it is selected. Here there are two `select` functions separated by a comma, so the same input is presented to both `select` functions and the results are concatenated together.
+`path(path expression)` is a pretty unusual builtin function in `jq`. The output of `path()` depends on matches made to the Path Expression inside of the parens; when a match is made, `path()` will output each element of the object keys and array indices leading to the matched element, storing each set in an array, e.g. `[ "cat" ]`, `[ "cat", "domesticated" ]`, `[ "cat", "domesticated", 0 ]`, `[ "cat", "domesticated", 0, "petname" ]`, `[ "cat", "domesticated", 0, "breed" ]`. The really odd part is that the output of the function is based on the fact that a match was made by the Path Expression inside of the parens, not from the input directly. The Path Expression inside of the parens can be based on the input to `path()`, but it doesn't have to be that way; the one used here *is* based on the input to the filter.
+
+`..` recursively descends through each element of the input, one element at a time. `select()` will filter its input by some criteria; if the criteria evaluates to `false` or `null`, the item is not selected and therefor does not make it out of the filter, otherwise it is selected. Here there are two `select` functions separated by a comma, which means that the same input is presented to both `select` functions and the results are concatenated together.
 
 The main selection criteria is `select(scalars|tostring)`. The `scalars` function will only select the end nodes of the JSON structure -- `jq` calls them the 'non-iterables', i.e. the nodes without children, or the non-interim nodes (e.g. not `[ "cat" ]`, `[ "cat", "domesticated" ]`, or `[ "cat", "domesticated", 0 ]` -- just `[ "cat", "domesticated", 0, "petname" ]` and `[ "cat", "domesticated", 0, "breed" ]`). The `scalars` function will return just the values of the end nodes to then be evaluated by `select`; before that happens, though, those values are run through the `tostring` function so that a value of `false` or `null` will be turned into `"false"` and `"null"`, preventing `select` from rejecting them (it will also turn `20` into `"20"` and `true` into `"true"`, which we don't care about -- but they also don't hurt).
 
-The value of **`$EMPTY_TESTS`** depends on whether or not `-e` or `-E` is specified; if `-e` is given (which is the default) then empty arrays (`[]`) and empty objects (`{}`) are considered to be end nodes for our purposes, and if `-E` is given then they are not. The filter for `-e` is `tostring == "[]" or tostring == "{}"` which causes the filter to check for the empty array or empty object  so that `select` can return true (the `or` is not quite the same as an "or" in most conventional programming languages, but it is here). The filter for `-E` is just the JSON value of `false`, which will never be selected.
+The value of **`$EMPTY_TESTS`** depends on whether or not `-e` or `-E` is specified; if `-e` is given (which is the default) then empty arrays (`[]`) and empty objects (`{}`) are considered to be end nodes for our purposes, and if `-E` is given then they are not. The filter for `-e` is `tostring == "[]" or tostring == "{}"` which causes the filter to check for the empty array or empty object  so that `select` can return true (`jq`'s definition of `or` is not quite the same as "or" in most conventional programming languages, but it effectively is here). The filter for `-E` is just the JSON value of `false`, which will never be selected.
 
 The results of this compound filter (`select(...), select(...)`) will cause the Path Expression to "match" for some pieces of the JSON structure, and `path()` will grab the path elements of each of them as an array, as described above, e.g. the path elements for `fluffy` & `misty` would be `[ "cat", "domesticated", 0, "petname" ]` and `[ "cat", "domesticated", 1, "petname" ]`, respectively. Finally, the brackets `[ ... ]` will take all of the selected results and store them in an outer array, e.g. `[[ "cat", "domesticated", 0, "petname" ], [ "cat", "domesticated", 1, "petname" ]]`.
 
@@ -80,14 +82,14 @@ Phew.
 
 References:
 [path](https://stedolan.github.io/jq/manual/#path(path_expression)),
-[Path Expressions](https://github.com/stedolan/jq/wiki/jq-Language-Description#Path-Expressions)
+[Path Expressions](https://github.com/stedolan/jq/wiki/jq-Language-Description#Path-Expressions),
 [Recursive Descent](https://stedolan.github.io/jq/manual/#RecursiveDescent:..),
 [select](https://stedolan.github.io/jq/manual/#select(boolean_expression)),
 [comma](https://stedolan.github.io/jq/manual/#Comma:,),
 [scalars](https://stedolan.github.io/jq/manual/#arrays,objects,iterables,booleans,numbers,normals,finites,strings,nulls,values,scalars),
 [tostring](https://stedolan.github.io/jq/manual/#tostring),
 [or](https://stedolan.github.io/jq/manual/#and/or/not),
-["or" versus "//"](https://github.com/stedolan/jq/wiki/FAQ#or-versus-)
+["or" versus "//"](https://github.com/stedolan/jq/wiki/FAQ#or-versus-),
 [Array Construction](https://stedolan.github.io/jq/manual/#Arrayconstruction:[])
 
 ---
@@ -110,9 +112,9 @@ The "key" for the object is constructed using this expression: `(map(. | tostrin
 
 Taken together, this expression will take the path elements `["cat","domesticated",0,"petname"]` and create a key string of `"cat.domesticated.0.petname"`.
 
-The "value" for the object is constructed using the expression: `(. as \$path | . = \$data | getpath(\$path))`
+The "value" for the object is constructed using the expression: `(. as \$path | . = \$data | getpath(\$path))`.
 
-`. as \$path` will take the current input (e.g. `["cat","domesticated",0,"petname"]`) and save it into a `jq` variable named `$path` to be referenced later. This is needed because `. = $data` will take the value of the `jq` variable `$data` and make it the current input. `getpath()` will take the current input and lookup the value represented by an array of path elements passed into it. At this point, the current input (`.`) has been set to `$data`, which is the original input to the whole filter (set in the first segment), and `$path` is the array of path elements in the current iteration of map, e.g. `["cat","domesticated",0,"petname"]`, the result of which is a value, in this case `Fluffy`.
+`. as \$path` will take the current input (e.g. `["cat","domesticated",0,"petname"]`) and save it into a `jq` variable named `$path` to be referenced later (this is called the "Symbolic Binding Operator"). This is needed because `. = $data` will take the value of the `jq` variable `$data` and make it the current input. `getpath()` will take the current input and lookup the value represented by an array of path elements passed into it. At this point, the current input (`.`) has been set to `$data`, which is the original input to the whole filter (set in the first segment), and `$path` is the array of path elements in the current iteration of map, e.g. `["cat","domesticated",0,"petname"]`, the result of which is a value, in this case `Fluffy`.
 
 Putting the key and value expression results together, we get something like the following: `{"cat.domesticated.0.petname":"Fluffy"}` -- repeat this for each end node in the JSON input, stick the whole thing back into an array, and move on to the next segment.
 
@@ -152,7 +154,7 @@ If you're not following that, maybe a more visual example will help. Using [jqpl
 }
 ```
 
-You can see int the DEBUG output that the results object is built up line by line, ending as a single object with all of the array elements in it.
+You can see in the DEBUG output that the results object is built up line by line, ending as a single object with all of the array elements in it.
 
 References:
 [reduce](https://stedolan.github.io/jq/manual/#Reduce),
@@ -191,7 +193,7 @@ the `to_entries` filter transforms this into the following:
 ```
 
 References:
-[to_entries](https://stedolan.github.io/jq/manual/#to_entries,from_entries,with_entries),
+[to_entries](https://stedolan.github.io/jq/manual/#to_entries,from_entries,with_entries)
 
 ---
 
