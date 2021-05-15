@@ -31,7 +31,7 @@ main() {
     # -Q clear out all current JQ pass-through options
 
     jq_bin=${JQ_BIN:-jq}
-    jqg_version="v1.0.0-rc.1"
+    jqg_version="v1.0.0"
 
     def_join_char="."
     def_search_elem=".[]"
