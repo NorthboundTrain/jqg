@@ -19,7 +19,7 @@ $ jq . odd-values.json
   "two": [
     {
       "two-a": {
-        "non-integer-number": 101.75,
+        "non-integer-number": -101.75,
         "number-zero": 0
       },
       "true-boolean": true,
@@ -53,12 +53,12 @@ $ jq . odd-values.json | grep string
 
 $ jq . odd-values.json | grep 0
     "integer-number": 101
-      "non-integer-number": 101.75,
+      "non-integer-number": -101.75,
       "number-zero": 0
 
 $ jq . odd-values.json | grep 'int\|false'
     "integer-number": 101
-      "non-integer-number": 101.75,
+      "non-integer-number": -101.75,
       "false-boolean": false
 
 
@@ -74,7 +74,7 @@ $ jqg string odd-values.json
 $ jqg 0 odd-values.json
 {
   "one.integer-number": 101,
-  "two.0.two-a.non-integer-number": 101.75,
+  "two.0.two-a.non-integer-number": -101.75,
   "two.0.two-a.number-zero": 0,
   "two.0.true-boolean": true,
   "two.0.two-b.false-boolean": false
@@ -83,7 +83,7 @@ $ jqg 0 odd-values.json
 $ jqg 'int|false' odd-values.json
 {
   "one.integer-number": 101,
-  "two.two-a.non-integer-number": 101.75,
+  "two.two-a.non-integer-number": -101.75,
   "two.two-b.false-boolean": false
 }
 

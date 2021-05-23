@@ -7,7 +7,7 @@
   "two": [
     {
       "two-a": {
-        "non-integer-number": 101.75,
+        "non-integer-number": -101.75,
         "number-zero": 0
       },
       "true-boolean": true,

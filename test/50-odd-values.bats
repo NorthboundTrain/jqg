@@ -67,7 +67,7 @@ EOF
     assert_output - <<EOF
 {
   "one.integer-number": 101,
-  "two.0.two-a.non-integer-number": 101.75,
+  "two.0.two-a.non-integer-number": -101.75,
   "two.0.two-a.number-zero": 0
 }
 EOF
