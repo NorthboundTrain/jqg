@@ -1,52 +1,58 @@
 #!/usr/bin/env bash
 
+#***************************************************************************
+#*** jqg - search JSON using jq, printing full path/flattened results
+#*** Copyright 2021 Joseph Casadonte
+#***************************************************************************
+#*** Licensed under the Apache License, Version 2.0 (the "License");
+#*** you may not use this file except in compliance with the License.
+#*** You may obtain a copy of the License at
+#***
+#*** http://www.apache.org/licenses/LICENSE-2.0
+#***
+#*** Unless required by applicable law or agreed to in writing, software
+#*** distributed under the License is distributed on an "AS IS" BASIS,
+#*** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#*** See the License for the specific language governing permissions and
+#*** limitations under the License.
+#***************************************************************************
+#*** project URL: https://github.com/NorthboundTrain/jqg
+#***************************************************************************
+
 main() {
-    #***** parse options *****
-    _getopt=$(pgetopt --options iIkvarRKVAeEj:Jq:Qh --long ignore_case,match_case,keys,values,all,raw,json,searchkeys,searchvalues,searchall,include_empty,exclude_empty,join:,join_colon,jqopt:,clear,help,bug --name 'jqg' -- $JQG_OPTS "$@")
+#echo -n "#1: "; echo "$@"
+    #***** parse command line options *****
+    #----- process $JQ_OPTS before those typed in -----
+    _getopt=$(pgetopt --options iIkvarRKVAeEj:Jq:Qdh --long ignore_case,match_case,keys,values,all,raw,json,searchkeys,searchvalues,searchall,include_empty,exclude_empty,join:,join_colon,jqopt:,clear,debug,help,bug --name 'jqg' -- $JQG_OPTS "$@")
     if [[ $? != 0 ]] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
     eval set -- "$_getopt"
 
-    # -i case insensitive (default)
-    # -I case sensitive
-
-    # -K output keys
-    # -V output values
-    # -A output all (default)
-
-    # -j <char> key separator character (default: ".")
-    # -J use alternate key separator character ($JQG_ALTSEP)
-
-    # -k search keys
-    # -v search values
-    # -a search both (default)
-
-    # -e include empty arrays & objects (default)
-    # -E exclude empty arrays & objects
-
-    # -r do not put strings in quotes
-    # -R print valid JSON (default)
-
-    # -q <opt> pass-through options to JQ
-    # -Q clear out all current JQ pass-through options
-
+#echo -n "#2: "; echo "$@"
+    #***** determine JQ binary *****
     jq_bin=${JQ_BIN:-jq}
-    jqg_version="v1.0.0"
+    jqg_version="v1.1.0"
 
+    #***** set default options *****
     def_join_char="."
     def_search_elem=".[]"
     def_case_flag=i
-    def_empty_tests="tostring == \"[]\" or tostring == \"{}\""
+    def_empty_tests="empty_leafs"
+    def_output_filter="."
+    def_strip_array="."
 
     join_char=$def_join_char
     search_elem=$def_search_elem
     case_regex=$def_case_flag
     empty_tests=$def_empty_tests
+    out_filter=$def_output_filter
+    strip_array=$def_strip_array
 
-    out_filter=
     jqflags=
     jqraw=
 
+#echo -n "#3: "; echo "$@"
+    #***** finish processing the options *****
     while true; do
         case "$1" in
             -i | --ignore_case ) case_regex=$def_case_flag; shift ;;
@@ -56,9 +62,9 @@ main() {
             -v | --searchvalues ) search_elem='.value'; shift ;;
             -a | --searchall ) search_elem=$def_search_elem; shift ;;
 
-            -K | --keys ) out_filter='| keys_unsorted'; shift ;;
-            -V | --values ) out_filter='| [ .[] ]'; shift ;;
-            -A | --all ) out_filter=; shift ;;
+            -K | --keys ) out_filter='keys_unsorted'; shift ;;
+            -V | --values ) out_filter='[ .[] ]'; shift ;;
+            -A | --all ) out_filter=$def_output_filter; shift ;;
 
             -j | --join ) join_char="$2"; shift 2 ;;
             -J | --join_colon ) join_char=':'; shift ;;
@@ -66,13 +72,14 @@ main() {
             -e | --include_empty ) empty_tests=$def_empty_tests; shift ;;
             -E | --exclude_empty ) empty_tests=false; shift ;;
 
-            -r | --raw ) jqraw='-r'; strip_array='|.[]'; shift ;;
-            -R | --json ) jqraw=; strip_array=; shift ;;
+            -r | --raw ) jqraw='-r'; strip_array='.[]'; shift ;;
+            -R | --json ) jqraw=; strip_array=$def_strip_array; shift ;;
 
             -q | --jqopt ) jqflags="$jqflags $2"; shift 2 ;;
             -Q | --clear ) jqflags=; shift ;;
 
-            -h | --help ) echo; echo "usage: jqg [-i|-I] [-a|-k|-v] [-A|-K|-V] [-j=.|-J] [-R|-r] [-e|-E] [-q <opt>] [-Q] [--bug] [REGEX [FNAME]]"; exit 0 ;;
+            -d | --debug ) debug=true; shift ;;
+            -h | --help ) echo; echo "usage: jqg [-i|-I] [-a|-k|-v] [-A|-K|-V] [-j=.|-J] [-R|-r] [-e|-E] [-q <opt>] [-Q] [-d] [--bug] [REGEX [FNAME]]"; exit 0 ;;
 
             --bug )
                 echo
@@ -85,7 +92,7 @@ main() {
                 echo "Please include the following information in your bug report:"
                 echo
                 echo "JQG: $jqg_version"
-                echo "JQ: `$jq_bin --version`"
+                echo "JQ: $($jq_bin --version)"
                 echo "BASH: $SHELL -- $BASH_VERSION"
                 echo "\$JQG_OPTS: $JQG_OPTS"
                 echo "\$JQ_BIN: $JQ_BIN"
@@ -99,23 +106,51 @@ main() {
         esac
     done
 
+#echo -n "#4: "; echo "$@"
     #----- special case: no -r without -V|-A -----
-    if [[ -z "$out_filter" ]]; then
-        strip_array=
+    if [[ "$out_filter" == "$def_output_filter" ]]; then
+        strip_array=$def_strip_array
     fi
 
-    #
+    #***** grab the regular expression to search for *****
     regex=${1:-.}; shift
 
-    #
-    $jq_bin $jqraw $jqflags \
-            ". as \$data | \
-                [ path(.. | select(scalars|tostring), select($empty_tests)) ] | \
-                map({ (map(tostring) | join(\"$join_char\")) : (. as \$path | . = \$data | getpath(\$path)) }) | \
-                reduce .[] as \$item ({ }; . + \$item) | \
-                to_entries | \
-                map(select($search_elem | tostring | test(\"${regex//\\/\\\\}\"; \"${case_regex}xn\"))) | \
-                from_entries$out_filter$strip_array" < "${1:-/dev/stdin}"
+    if [[ "$regex" == "." ]]; then
+        filter_json=".";
+    else
+        filter_json="filter_json"
+    fi
+
+    #***** construct the JQ filter *****
+    read -r -d '' filter <<EOF
+
+def empty_leafs: select(tostring | . == "{}" or . == "[]");
+
+def flatten_json:
+    . as \$data |
+    [ path(.. | select(scalars|tostring), select($empty_tests)) ] |
+    map({ (map(tostring) | join("$join_char")) : (. as \$path | . = \$data | getpath(\$path)) }) |
+    reduce .[] as \$item ({ }; . + \$item);
+
+def filter_json:
+    to_entries |
+    map(select($search_elem | tostring | test("${regex//\\/\\\\}"; "${case_regex}xn"))) |
+    from_entries;
+
+def format_output: $out_filter | $strip_array;
+
+flatten_json | $filter_json | format_output
+EOF
+
+    #***** debug output *****
+    if [[ "$debug" == "true" ]]; then
+        echo; echo; echo; echo "$filter"; echo; echo; echo
+        exit
+    fi
+
+    #***** execute the command *****
+    # shellcheck disable=SC2086
+    $jq_bin $jqraw $jqflags "$filter" < "${1:-/dev/stdin}"
     rc=$?
 
     exit $rc
@@ -617,4 +652,7 @@ pgetopt() {
 # The test here distinguishes script execution from "source script.sh" which
 # will define the functions without calling main, for calling functions from
 # another script or testing at the command-line.
-[[ $BASH_SOURCE != "$0" ]] || main "$@"
+[[ ${BASH_SOURCE[0]} != "$0" ]] || main "$@"
+
+#***************************************************************************
+#*****  EOF  *****  EOF  *****  EOF  *****  EOF  *****  EOF  ***************

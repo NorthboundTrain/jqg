@@ -1,12 +1,12 @@
-# `jqg` - search JSON using `jq`
+# `jqg` - search flattened JSON using `jq`
 
 [![BATS](https://github.com/NorthboundTrain/jqg/actions/workflows/bats.yml/badge.svg)](https://github.com/NorthboundTrain/jqg/actions/workflows/bats.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://github.com/NorthboundTrain/jqg/LICENSE)
 ![GitHub all releases](https://img.shields.io/github/downloads/NorthboundTrain/jqg/total)
 
-JSON is an inherently hierarchical structure, which makes searching it for path information difficult. The `jqg` script flattens the hierarchical structure so that the path for each JSON end node is represented as a single string, thereby enabling easy searching and meaningful results.
+JSON is an inherently hierarchical structure, which makes searching it for path information difficult. The JQG script flattens the hierarchical structure so that the path for each JSON end node is represented as a single string, thereby enabling easy searching and meaningful results.
 
-For searching, `jqg` uses the [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions) engine built into `jq`, which is much more powerful than `grep` or `egrep` (and it's certainly easier to use). For added flexibility, `jqg` can read from STDIN instead of from a file, allowing it to be used in pipelines, too. Finally, there are many options to control what is searched and how, as well as the format of the output.
+For searching, JQG uses the [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions) engine built into JQ, which is much more powerful than `grep` or `egrep` (and it's certainly easier to use). For added flexibility, JQG can read from STDIN instead of from a file, allowing it to be used in pipelines, too. Finally, there are many options to control what is searched and how, as well as the format of the output.
 
 ```none
 $ jq . odd-values.json
@@ -90,14 +90,14 @@ $ jqg 'int|false' odd-values.json
 
 
 # The power of PCRE
-# - find a 0 without a preceeding number
+# - search values looking for a 0 without a preceeding number
 $ jqg -v '(?<!\d)0' odd-values.json
 {
   "two.0.two-a.number-zero": 0
 }
 
-# - the same or empty brackets
-$ jqg -v '(?<!\d)0|\[\]' odd-values.json
+# - the same or and empty array
+$ jqg -v '(?<!\d)0|\[]' odd-values.json
 {
   "two.0.two-a.number-zero": 0,
   "three.empty-array": []
@@ -105,7 +105,7 @@ $ jqg -v '(?<!\d)0|\[\]' odd-values.json
 
 
 # can be used in pipelines, too
-$ curl -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/test/odd-values.json | jqg -v '(?<!\d)0|\[\]'
+$ curl -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/test/odd-values.json | jqg -v '(?<!\d)0|\[]'
 {
   "two.0.two-a.number-zero": 0,
   "three.empty-array": []
@@ -118,7 +118,7 @@ Many more examples are provided in [jqg-examples.md](doc/jqg-examples.md).
 
 ### Prerequisites
 
-The `jqg` script is self-contained except for the need to have both `jq` and `bash` on the system somewhere; `bash` itself needs to be on your `$PATH`, but `jq` does not -- see the [documentation](doc/jqg.md) for more details.
+The JQG script is self-contained except for the need to have both `jq` and `bash` on the system somewhere; `bash` itself needs to be on your `$PATH`, but `jq` does not -- see the [documentation](doc/jqg.md) for more details.
 
 ### Download the Script
 
@@ -144,7 +144,7 @@ cd /path/to/git/parent/dir
 git clone git@github.com/NorthboundTrain/jqg.git
 ```
 
-If you want to run the unit tests, you will also need the [`BATS`](https://github.com/bats-core) sub-modules; you can clone them at the same time by adding in the `--recurse-submodules` option for `git clone`:
+If you want to run the unit tests, you will also need the [BATS](https://github.com/bats-core) sub-modules; you can clone them at the same time by adding in the `--recurse-submodules` option for `git clone`:
 
 ```none
 git clone --recurse-submodules https://github.com:NorthboundTrain/jqg.git
@@ -160,19 +160,19 @@ git clone --recurse-submodules git@github.com:NorthboundTrain/jqg.git
 
 ### Basic Usage
 
-Execute `jqg` against a specific JSON file:
+Execute JQG against a specific JSON file:
 
 `jqg search-string foo.json`
 
-Execute `jqg` in a pipeline:
+Execute JQG in a pipeline:
 
 `curl -s 'https://api.github.com/repos/NorthboundTrain/jqg' | jqg 'name|count'`
 
 ## Documentation & Examples
 
-- [jqg.md](doc/jqg.md) - the `jqg` man page
+- [jqg.md](doc/jqg.md) - the JQG man page
 - [jqg-examples.md](doc/jqg-examples.md) - an exhaustive look at the different invocation methods as well as each command line option
-- [jqg-filters.md](doc/jqg-filters.md) - the fully annotated `jqg` filter
+- [jqg-filters.md](doc/jqg-filters.md) - the fully annotated JQG filter
 
 ## Contributing
 
@@ -198,4 +198,4 @@ This project uses code from the following projects:
 ## Copyright
 
 © 2021 Joseph Casadonte<br/>
-`jqg` is released under the Apache 2.0 license; see [LICENSE](LICENSE) for details.<br/>
+JQG is released under the Apache 2.0 license; see [LICENSE](LICENSE) for details.<br/>

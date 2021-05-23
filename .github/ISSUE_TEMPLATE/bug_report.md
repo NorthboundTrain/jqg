@@ -28,7 +28,7 @@ Please run the command `jqg --bug` and paste the output here:
 ---
 **To Reproduce**
 
-Please include a small, valid JSON snippet that can be used to reproduce the issue, along with the `jqg` command line.
+Please include a small, valid JSON snippet that can be used to reproduce the issue, along with the JQG command line.
 
 ---
 **Additional Context**

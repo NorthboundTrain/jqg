@@ -2,7 +2,7 @@
 
 ## Sample JSON for Examples
 
-These are the JSON files used in the unit test scripts. As such, the data in them is pretty nonsensical and even, perhaps, inaccurate; its primary purpose is to test various conditions.
+These are the JSON files used in the unit test scripts. As such, the data in them is pretty nonsensical and even (perhaps) inaccurate; its primary purpose is to test various program conditions.
 
 [//]: # (==================================================================)
 <details>
@@ -135,15 +135,10 @@ $ jqg -I Tiger carnivora.json
 <summary>search keys & values (default)</summary>
 
 ```json
-$ jqg domestic carnivora.json
+$ jqg king carnivora.json
 {
-  "cat.domesticated.0.petname": "Fluffy",
-  "cat.domesticated.0.breed": "Bengal",
-  "cat.domesticated.0.color": "",
-  "cat.domesticated.1.petname": "Misty",
-  "cat.domesticated.1.breed": "domestic short hair",
-  "cat.domesticated.1.color": "yellow",
-  "dog.1.type": "domesticated"
+  "classification.kingdom": "animalia",
+  "cat.feral.0.aka": "king of the beasts"
 }
 ```
 
@@ -154,14 +149,9 @@ $ jqg domestic carnivora.json
 <summary>search keys only</summary>
 
 ```json
-$ jqg -k tiger carnivora.json
+$ jqg -k king carnivora.json
 {
-  "cat.domesticated.0.petname": "Fluffy",
-  "cat.domesticated.0.breed": "Bengal",
-  "cat.domesticated.0.color": "",
-  "cat.domesticated.1.petname": "Misty",
-  "cat.domesticated.1.breed": "domestic short hair",
-  "cat.domesticated.1.color": "yellow"
+  "classification.kingdom": "animalia"
 }
 ```
 
@@ -172,10 +162,9 @@ $ jqg -k tiger carnivora.json
 <summary>search values only</summary>
 
 ```json
-$ jqg -v tiger carnivora.json
+$ jqg -v king carnivora.json
 {
-  "cat.domesticated.1.breed": "domestic short hair",
-  "dog.1.type": "domesticated"
+  "cat.feral.0.aka": "king of the beasts"
 }
 ```
 
@@ -377,7 +366,7 @@ $  jq . carnivora.json | jqg feli | jq -S -c
 
 [//]: # (==================================================================)
 
-## `jq` Option Pass-Through Examples
+## JQ Option Pass-Through Examples
 
 [//]: # (------------------------------------------------------------------)
 <details>
@@ -648,6 +637,98 @@ $ jqg -q -S . odd-values.json
   "two.1.two-c.alpha-num-1": "a1",
   "two.1.two-c.alpha-num-2": "2b",
   "two.1.two-c.alpha-num-3": "a12b"
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>case insensitive multi-string value search</summary>
+
+```json
+$ jqg -v 'f|M' carnivora.json
+{
+  "isa": "mammal",
+  "classification.kingdom": "animalia",
+  "classification.class": "mammalia",
+  "subclades.0": "feliformia",
+  "subclades.1": "caniformia",
+  "cat.isa": "feline",
+  "cat.feral.0.aka": "king of the beasts",
+  "cat.feral.2.species": "black-footed cat",
+  "cat.feral.2.aka": "felis nigripes",
+  "cat.domesticated.0.petname": "Fluffy",
+  "cat.domesticated.1.petname": "Misty",
+  "cat.domesticated.1.breed": "domestic short hair",
+  "dog.0.breed": "mutt",
+  "dog.1.type": "domesticated"
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>case insensitive multi-string value search with regex override for sub-expression</summary>
+
+```json
+$ jqg -v 'f|(?-i:M)' carnivora.json
+{
+  "subclades.0": "feliformia",
+  "subclades.1": "caniformia",
+  "cat.isa": "feline",
+  "cat.feral.0.aka": "king of the beasts",
+  "cat.feral.2.species": "black-footed cat",
+  "cat.feral.2.aka": "felis nigripes",
+  "cat.domesticated.0.petname": "Fluffy",
+  "cat.domesticated.1.petname": "Misty"
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>case sensitive multi-string value search</summary>
+
+```json
+$ jqg -Iv 'f|M' carnivora.json
+{
+  "subclades.0": "feliformia",
+  "subclades.1": "caniformia",
+  "cat.isa": "feline",
+  "cat.feral.0.aka": "king of the beasts",
+  "cat.feral.2.species": "black-footed cat",
+  "cat.feral.2.aka": "felis nigripes",
+  "cat.domesticated.0.petname": "Fluffy",
+  "cat.domesticated.1.petname": "Misty"
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>case sensitive multi-string value search with regex override for sub-expression</summary>
+
+```json
+$ jqg -Iv 'f|(?i:M)' carnivora.json
+{
+  "isa": "mammal",
+  "classification.kingdom": "animalia",
+  "classification.class": "mammalia",
+  "subclades.0": "feliformia",
+  "subclades.1": "caniformia",
+  "cat.isa": "feline",
+  "cat.feral.0.aka": "king of the beasts",
+  "cat.feral.2.species": "black-footed cat",
+  "cat.feral.2.aka": "felis nigripes",
+  "cat.domesticated.0.petname": "Fluffy",
+  "cat.domesticated.1.petname": "Misty",
+  "cat.domesticated.1.breed": "domestic short hair",
+  "dog.0.breed": "mutt",
+  "dog.1.type": "domesticated"
 }
 ```
 

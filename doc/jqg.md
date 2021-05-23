@@ -2,7 +2,7 @@
 
 ## NAME
 
-**jqg** - search JSON using **`jq`**, printing full path/flattened results
+**jqg** - search JSON using JQ, printing full path/flattened results
 
 ## SYNOPSIS
 
@@ -10,7 +10,7 @@
 
 ## DESCRIPTION
 
-Process JSON file using `jq`, searching through the content looking to match the supplied `<regex>`. Can be used with a file name or via `STDIN` (as part of a pipeline).
+Process JSON file using JQ, searching through the content looking to match the supplied `<regex>`. Can be used with a file name or via `STDIN` (as part of a pipeline).
 
 ### Requirements
 
@@ -19,7 +19,7 @@ Process JSON file using `jq`, searching through the content looking to match the
 
 ### Arguments
 
-Flatten and then search JSON for the REGEX supplied, using '`.`' if not specified (which matches everything). `jqg` uses the [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions) engine built into `jq`; see the `jq` [man page](https://stedolan.github.io/jq/manual/#RegularexpressionsPCRE) for more details. FILE will be processed as a JSON file, reading `STDIN` if not specified.
+Flatten and then search JSON for the REGEX supplied, using '`.`' if not specified (which matches everything). JQG uses the [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions) engine built into JQ; see the JQ [man page](https://stedolan.github.io/jq/manual/#RegularexpressionsPCRE) for more details. FILE will be processed as a JSON file, reading `STDIN` if not specified.
 
 ### OPTIONS
 
@@ -51,8 +51,9 @@ Flatten and then search JSON for the REGEX supplied, using '`.`' if not specifie
 
 |    |    |
 | --- | --- |
-| `-q <flag>, --jqopt <flag>` | command-line options to be passed to `jq`; can be given multiple times |
-| `-Q, --clear` | clear all `jq` options previously set with `-q` |
+| `-q <flag>, --jqopt <flag>` | command-line options to be passed to JQ; can be given multiple times |
+| `-Q, --clear` | clear all JQ options previously set with `-q` |
+| `-d, --debug` | print the JQ filter created as a result of parsing all of the JQG command line options, but don't actually run it |
 | `-h, --help` | print brief help and exit |
 
 ## EXAMPLES
@@ -61,13 +62,13 @@ An exhaustive look at the different invocation methods as well as each command l
 
 ## EXIT STATUS
 
-`jqg` will exit with the exit status of `jq` itself.
+JQG will exit with the exit status of JQ itself, with the following exceptions: error parsing JQG command line options (exit code: 1), printing help or debug output (exit code: 0).
 
 ## ENVIRONMENT
 
-`$JQG_OPTS` - hard code options to `jqg`; these options can be overridden on the command line
+`$JQG_OPTS` - hard code options to JQG; these options can be overridden on the command line
 
-`$JQ_BIN` - full path to the `jq` binary (default is to find it on your `$PATH`
+`$JQ_BIN` - full path to the JQ binary (default is to find it on your `$PATH`
 
 ## SEE ALSO
 
