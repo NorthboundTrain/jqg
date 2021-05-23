@@ -31,7 +31,7 @@ main() {
 #echo -n "#2: "; echo "$@"
     #***** determine JQ binary *****
     jq_bin=${JQ_BIN:-jq}
-    jqg_version="v1.1.0"
+    jqg_version="v1.1.1"
 
     #***** set default options *****
     def_join_char="."

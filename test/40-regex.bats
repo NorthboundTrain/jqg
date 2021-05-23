@@ -321,6 +321,7 @@ EOF
 
 
 @test "[40] case-insensitive two-element value search w/ REGEXP override" {
+    skip "requires more recent Oniguruma release in JQ (jq-1.6-137-gd18b2d0-dirty or later)"
     run jqg -v 'f|(?-i:M)' $CARNIVORA_JSON
     assert_success
     assert_output - <<EOF
