@@ -4,9 +4,9 @@ A JQ program is really a series of filters that data goes through, transforming 
 
 I wrote this document as much for my own edification as anything else; I got some elements of the JQG filter to work through trial and error, without a full understanding of why it did or didn't work as expected. This helped me understand the whole thing.
 
-**Note #1:** Use the [jqplay](https://jqplay.org/) site with the data below to play around with some of the sub-expressions in the filter; it really helps illustrate what each piece of syntax does. In addition, you can add in the `debug` function at any step to dump out the current input at that moment, which *really* helps illustrate what's happening.
+**Hint:** Use the [jqplay](https://jqplay.org/) site with the data below to play around with some of the sub-expressions in the filter; it really helps illustrate what each piece of syntax does. In addition, you can add in the `debug` function at any step to dump out the current input at that moment, which *really* helps illustrate what's happening.
 
-**Note #2:** If you find any errors in my explanation, please submit a bug.
+If you find any errors in my explanation, please submit a bug.
 
 ## Example JSON
 
@@ -32,7 +32,7 @@ The explanation below will reference the following JSON snippet:
 
 ## The JQG Filter
 
-This is the JQ filter used in JQG. There are three primary filters, one to flatten the JSON, one to search it, and then one to format the output. There are four named functions defined, each of which is comprised of multiple filters. Functions themselves just collect together a group of filters, which is good to help keep it all organized and reduce code duplication.
+Below is the JQ filter used in JQG. There are three primary filters, one to flatten the JSON, one to search it, and then one to format the output. There are four named functions defined, each of which is comprised of multiple filters. Functions themselves just collect together a group of filters, which is good to help keep it all organized and reduce code duplication.
 
 There are two types of variables defined here: JQ variables (shown all in lower case) and BASH variables (shown all in UPPER CASE, and referred to below **`$LIKE_SO`**). In the real JQG script, the filter is escaped properly to make it through the shell into JQ, but here it's presented so that you can cut and paste it into [jqplay](https://jqplay.org/) as easily as possible. The **`$EMBEDDED_SHELL_VARIABLES`** will cause the tool problems, of course, but just replace as appropriate and you should be good to go (see the `--debug` command-line option to JQG for help with this).
 
@@ -57,12 +57,12 @@ flatten_json | $FILTER_JSON | format_output
 
 Different filters are separated by a pipe ('`|`') or a comma ('`,`'); the pipe is analogous to a shell pipe, where the output of the first filter is used as the input to the following filter, whereas with the comma, the input to each filter is the same and the output is the concatenation of each filter's results.
 
-The different functions are explained individually in one or more sections below; each section will have a heading of "[`function name`] Filter: " or "[`function name`] Filter Segment #x:" , e.g. "\[`empty_leafs`] Filter:" or "\[`flatten_json`] Filter Segment #2:".
+The different functions are explained individually in one or more sections below; each section will have a heading of "\[`function name`] Filter: " or "\[`function name`] Filter Segment #x:" , e.g. "\[`empty_leafs`] Filter:" or "\[`flatten_json`] Filter Segment #2:".
 
-References:
+*References:*
 [Defining Functions](https://stedolan.github.io/jq/manual/#DefiningFunctions),
-[pipe](https://stedolan.github.io/jq/manual/#Pipe:|),
-[comma](https://stedolan.github.io/jq/manual/#Comma:,)
+[Pipe ('`|`')](https://stedolan.github.io/jq/manual/#Pipe:|),
+[Comma ('`,`')](https://stedolan.github.io/jq/manual/#Comma:,)
 
 ---
 
@@ -76,11 +76,13 @@ This is the JQG filter at its simplest. The first part flattens the input JSON b
 
 This function may or may not be called as part of `flatten_json` -- see the `flatten_json` Filter Segment #2 below for details.
 
-`select()` will filter its input by some criteria; if the criteria evaluates to `false` or `null`, the item is not selected and therefor does not make it out of the filter, otherwise it is selected. The `tostring` filter will take its input and convert it to a string (if it's not a string already). We only care about empty objects (`{}`) and empty arrays (`[]`); those will be selected, anything else will be rejected. Note that JQ's definition of `or` is not quite the same as "or" in most conventional programming languages, but for our purposes it effectively is like the "or" in most other languages.
+`select()` will filter its input by some criteria; if the criteria evaluates to `false` or `null`, the item is not selected and therefor does not make it out of the filter, otherwise it is selected. The `tostring` filter will take its input and convert it to a string (if it's not a string already). This string is then passed to a multi-part conditional, comparing the current input ('`.`') with the strings "`{}`" and "`[]`", looking for matches. In this function we only care about empty objects (`{}`) and empty arrays (`[]`); those will be selected, anything else will be rejected. Note that JQ's definition of `or` is not quite the same as "or" in most conventional programming languages, but for our purposes it effectively is like the "or" in most other languages. The JQ definition of `==` requires an exact match of both type and value.
 
 References:
 [select](https://stedolan.github.io/jq/manual/#select(boolean_expression)),
 [tostring](https://stedolan.github.io/jq/manual/#tostring),
+[Identity ('`.`')](https://stedolan.github.io/jq/manual/#Identity:.),
+[==](https://stedolan.github.io/jq/manual/#==,!=),
 [or](https://stedolan.github.io/jq/manual/#and/or/not),
 ["or" versus "//"](https://github.com/stedolan/jq/wiki/FAQ#or-versus-)
 
@@ -117,7 +119,7 @@ References:
 [Path Expressions](https://github.com/stedolan/jq/wiki/jq-Language-Description#Path-Expressions),
 [Recursive Descent (..)](https://stedolan.github.io/jq/manual/#RecursiveDescent:..),
 [select](https://stedolan.github.io/jq/manual/#select(boolean_expression)),
-[comma](https://stedolan.github.io/jq/manual/#Comma:,),
+[Comma ('`,`')](https://stedolan.github.io/jq/manual/#Comma:,),
 [scalars](https://stedolan.github.io/jq/manual/#arrays,objects,iterables,booleans,numbers,normals,finites,strings,nulls,values,scalars),
 [tostring](https://stedolan.github.io/jq/manual/#tostring),
 [Array Construction](https://stedolan.github.io/jq/manual/#Arrayconstruction:[])

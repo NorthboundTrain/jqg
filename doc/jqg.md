@@ -66,9 +66,9 @@ JQG will exit with the exit status of JQ itself, with the following exceptions: 
 
 ## ENVIRONMENT
 
-`$JQG_OPTS` - hard code options to JQG; these options can be overridden on the command line
+`$JQG_OPTS` - specify default options for each JQG invocation; these options can be overridden on the command line
 
-`$JQ_BIN` - full path to the JQ binary (default is to find it on your `$PATH`
+`$JQ_BIN` - full path to the JQ binary (default is to find it on your `$PATH`)
 
 ## SEE ALSO
 

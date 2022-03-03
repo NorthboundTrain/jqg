@@ -3,6 +3,7 @@
 [![BATS](https://github.com/NorthboundTrain/jqg/actions/workflows/bats.yml/badge.svg)](https://github.com/NorthboundTrain/jqg/actions/workflows/bats.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://github.com/NorthboundTrain/jqg/LICENSE)
 ![GitHub all releases](https://img.shields.io/github/downloads/NorthboundTrain/jqg/total)
+[![Latest Release](https://img.shields.io/github/v/release/NorthboundTrain/jqg?sort=semver)](https://github.com/NorthboundTrain/jqg/releases/latest)
 
 JSON is an inherently hierarchical structure, which makes searching it for path information difficult. The JQG script flattens the hierarchical structure so that the path for each JSON end node is represented as a single string, thereby enabling easy searching and meaningful results.
 
@@ -90,7 +91,7 @@ $ jqg 'int|false' odd-values.json
 
 
 # The power of PCRE
-# - search values looking for a 0 without a preceeding number
+# - search values looking for a 0 without a preceding number
 $ jqg -v '(?<!\d)0' odd-values.json
 {
   "two.0.two-a.number-zero": 0
