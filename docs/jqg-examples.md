@@ -714,7 +714,7 @@ $ jqg -v 'f|M' carnivora.json
 
 <p/>
 
-**Note:** *due to a bug in JQ's Oniguruma library, this requires a post 1.6 JQ build (this was tested with `jq-1.6-137-gd18b2d0-dirty`)*
+***Test Skipped**: due to a bug in JQ's Oniguruma library, this requires a post 1.6 JQ build*
 
 ```json
 $ jqg -v 'f|(?-i:M)' carnivora.json

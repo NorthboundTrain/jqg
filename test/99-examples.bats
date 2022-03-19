@@ -571,7 +571,7 @@ EOF
 
 # case insensitive multi-string value search with regex override for sub-expression
 @test "[99] case insensitive multi-string value search with regex override for sub-expression" {
-    skip "due to a bug in JQ's Oniguruma library, this requires a post 1.6 JQ build (this was tested with `jq-1.6-137-gd18b2d0-dirty`)"
+    skip "due to a bug in JQ's Oniguruma library, this requires a post 1.6 JQ build"
     run  jqg -v 'f|(?-i:M)' $CARNIVORA_JSON
     assert_success
     assert_output - <<EOF

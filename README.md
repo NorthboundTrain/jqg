@@ -2,10 +2,12 @@
 
 [![BATS](https://github.com/NorthboundTrain/jqg/actions/workflows/bats.yml/badge.svg)](https://github.com/NorthboundTrain/jqg/actions/workflows/bats.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://github.com/NorthboundTrain/jqg/LICENSE)
-![GitHub all releases](https://img.shields.io/github/downloads/NorthboundTrain/jqg/total)
 [![Latest Release](https://img.shields.io/github/v/release/NorthboundTrain/jqg?sort=semver)](https://github.com/NorthboundTrain/jqg/releases/latest)
+[![Semantic Versioning](https://img.shields.io/badge/semantic_versioning-grey)](https://semver.org/)
+[![Common Changelog](https://common-changelog.org/badge.svg)](https://common-changelog.org)
+[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-JSON is an inherently hierarchical structure, which makes searching it for path information difficult. The JQG script flattens the hierarchical structure so that the path for each JSON end node is represented as a single string, thereby enabling easy searching and meaningful results.
+JSON is an inherently hierarchical structure, which makes searching it for path information difficult. The JQG script flattens the hierarchical structure so that the path for each JSON end node is represented as a single string, thereby enabling easy searching producing contextually meaningful results.
 
 For searching, JQG uses the [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions) engine built into JQ, which is much more powerful than `grep` or `egrep` (and it's certainly easier to use). For added flexibility, JQG can read from STDIN instead of from a file, allowing it to be used in pipelines, too. Finally, there are many options to control what is searched and how, as well as the format of the output.
 
@@ -97,7 +99,7 @@ $ jqg -v '(?<!\d)0' odd-values.json
   "two.0.two-a.number-zero": 0
 }
 
-# - the same or and empty array
+# - the same or an empty array
 $ jqg -v '(?<!\d)0|\[]' odd-values.json
 {
   "two.0.two-a.number-zero": 0,
@@ -114,6 +116,20 @@ $ curl -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/test/odd-va
 ```
 
 Many more examples are provided in [jqg-examples.md](doc/jqg-examples.md).
+
+## Table of Contents
+
+<details><summary>&nbsp;</summary>
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [Documentation & Examples](#documentation--examples)
+- [Version History](#version-history)
+- [Acknowledgements](#acknowledgements)
+- [Contributing](#contributing)
+- [License](#license)
+
+</details>
 
 ## Installation
 
@@ -175,16 +191,9 @@ Execute JQG in a pipeline:
 - [jqg-examples.md](doc/jqg-examples.md) - an exhaustive look at the different invocation methods as well as each command line option
 - [jqg-filters.md](doc/jqg-filters.md) - the fully annotated JQG filter
 
-## Contributing
+## Version History
 
-1. Check the open issues or open a new issue to start a discussion around your feature idea or the bug you found
-1. Fork the repository and make your changes
-1. Make sure all unit tests pass (and add new ones, if appropriate)
-1. Open a new pull request
-
-## Version history
-
-See the [Releases](https://github.com/NorthboundTrain/jqg/releases) page.
+see [CHANGELOG](CHANGELOG.md)
 
 ## Acknowledgements
 
@@ -196,7 +205,20 @@ This project uses code from the following projects:
 - [bats-core](https://github.com/bats-core) - Bash Automated Testing System
   - [bats-core](https://github.com/bats-core/bats-core), [bats-support](https://github.com/bats-core/bats-support), [bats-assert](https://github.com/bats-core/bats-assert), [bats-file](https://github.com/bats-core/bats-file)
 
-## Copyright
+## Contributing
 
-© 2021 Joseph Casadonte<br/>
-JQG is released under the Apache 2.0 license; see [LICENSE](LICENSE) for details.<br/>
+### Bugs / Feature Requests
+
+Bugs & feature requests are tracked as GitHub [issues](https://github.com/NorthboundTrain/jqg/issues).
+
+### Pull Requests
+
+1. Check the open issues or open a new issue to start a discussion around your feature idea or the bug you found
+1. Fork the repository and make your changes
+1. Make sure all unit tests pass (and add new ones, if appropriate)
+1. Open a new pull request
+
+## License
+
+[Apache-2.0](LICENSE)<br />
+© 2021 Joseph Casadonte

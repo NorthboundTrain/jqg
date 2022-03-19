@@ -34,7 +34,7 @@ use IO::File;
 
 #***** constants *****
 our($BATS_FILE) = "$FindBin::Bin/99-examples.bats";
-our($MD_FILE) = "$FindBin::Bin/../doc/jqg-examples.md";
+our($MD_FILE) = "$FindBin::Bin/../docs/jqg-examples.md";
 
 our($CARNIVORA_JSON_FILE) = "$FindBin::Bin/carnivora.json";
 our($ODD_VALUES_JSON_FILE) = "$FindBin::Bin/odd-values.json";
@@ -134,7 +134,7 @@ while (<$in>) {
 
     # skip "due to a bug ..."
     elsif (($looking_for == $EXPORT_RUN_OR_SKIP) && (m{^\s*skip\s+"([^"]+)\"})) {
-        $test_note = $1;
+        $test_note = "**Test Skipped**: $1";
         next;
     }
 
@@ -183,7 +183,7 @@ while (<$in>) {
 EOS
 
         #----- possible print out a note -----
-        $out->say("<p/>\n\n**Note:** *$test_note*\n") if $test_note;
+        $out->say("<p/>\n\n*$test_note*\n") if $test_note;
 
         #----- start the example -----
         $out->say("```json");
