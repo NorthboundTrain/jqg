@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format used here is based upon [Common Changelog](https://common-changelog.org/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) guidelines.
 
+## [1.1.3] - 2022-03-19
+
+### Added
+
+- add tests for problematic field separators (e.g. asterisk, space)
+
+### Fixed
+
+- fix `shellcheck` error regarding `$JQG_OPTS` ([#1][gh-00001])
+- fix remaining `shellcheck` errors
+
 ## [1.1.2] - 2022-03-19
 
 ### Changed
@@ -63,8 +74,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Initial release candidate._
 
+[//]: # (RELEASES)
+
+[1.1.3]: https://github.com/NorthboundTrain/jqg/tree/v1.1.3
 [1.1.2]: https://github.com/NorthboundTrain/jqg/tree/v1.1.2
 [1.1.1]: https://github.com/NorthboundTrain/jqg/tree/v1.1.1
 [1.1.0]: https://github.com/NorthboundTrain/jqg/tree/v1.1.0
 [1.0.0]: https://github.com/NorthboundTrain/jqg/tree/v1.0.0
 [1.0.0-rc.1]: https://github.com/NorthboundTrain/jqg/tree/v1.0.0-rc.1
+
+[//]: # (ISSUES)
+
+[gh-00001]: https://github.com/NorthboundTrain/jqg/issues/1

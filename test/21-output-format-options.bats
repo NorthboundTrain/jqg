@@ -326,3 +326,33 @@ EOF
 }
 EOF
 }
+
+@test "[21] problematic arbitrary separator (asterisk)" {
+    run jqg -j \* -r feral $CARNIVORA_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "cat*feral*0*species": "lion",
+  "cat*feral*0*aka": "king of the beasts",
+  "cat*feral*1*species": "Bengal tiger",
+  "cat*feral*2*species": "black-footed cat",
+  "cat*feral*2*aka": "felis nigripes",
+  "dog*1*feral": true
+}
+EOF
+}
+
+@test "[21] problematic arbitrary separator (space)" {
+    run jqg -j " " -r feral $CARNIVORA_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "cat feral 0 species": "lion",
+  "cat feral 0 aka": "king of the beasts",
+  "cat feral 1 species": "Bengal tiger",
+  "cat feral 2 species": "black-footed cat",
+  "cat feral 2 aka": "felis nigripes",
+  "dog 1 feral": true
+}
+EOF
+}

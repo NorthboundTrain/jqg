@@ -142,7 +142,7 @@ EOF
 
 
 # -j + / -j . override
-@test "[31] JQG_OPTS: equals separator (object)" {
+@test "[31] JQG_OPTS: plus sign separator (object)" {
     export JQG_OPTS="-j +"
     run jqg feral $CARNIVORA_JSON
     assert_success
@@ -238,7 +238,22 @@ EOF
 EOF
 }
 
-
+# -j *
+@test "[31] JQG_OPTS: problematic separator (asterisk)" {
+    export JQG_OPTS='-j *'
+    run jqg feral $CARNIVORA_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "cat*feral*0*species": "lion",
+  "cat*feral*0*aka": "king of the beasts",
+  "cat*feral*1*species": "Bengal tiger",
+  "cat*feral*2*species": "black-footed cat",
+  "cat*feral*2*aka": "felis nigripes",
+  "dog*1*feral": true
+}
+EOF
+}
 
 
 #        -e | --include_empty ) empty_tests=$def_empty_tests; shift ;;
