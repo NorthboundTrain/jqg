@@ -1,63 +1,62 @@
 {
-    "core": [
-        "citron",
+  "core": [
+    "citron",
+    "mandarin",
+    "pomelo",
+    "pompeda",
+    "kumquat"
+  ],
+  "hybrid": {
+    "orange": {
+      "ancestors": [
         "mandarin",
+        "pomelo"
+      ],
+      "sub-categories": [
+        "sweet orange",
+        "bitter orange"
+      ]
+    },
+    "grapefruit": {
+      "ancestors": [
         "pomelo",
-        "pompeda",
-        "kumquat"
-    ],
-    "hybrid": {
-        "orange": {
-            "ancestors": [
-                "mandarin",
-                "pomelo"
-            ],
-            "sub-categories": [
-                "sweet orange",
-                "bitter orange"
-            ]
+        "mandarin"
+      ],
+      "sub-categories": [
+        "common grapefruit",
+        "mandelo"
+      ]
+    },
+    "lemon": {
+      "ancestors": [
+        "citron",
+        "sour orange"
+      ],
+      "related": {
+        "rough lemon": {
+          "ancestors": [
+            "citron",
+            "mandarin"
+          ]
         },
-        "grapefruit": {
-            "ancestors": [
-                "pomelo",
-                "mandarin"
-            ],
-            "sub-categories": [
-                "common grapefruit",
-                "mandelo"
-            ]
-        },
-        "lemon": {
-            "ancestors": [
-                "citron",
-                "sour orange"
-            ],
-            "related": {
-                "rough lemon": {
-                    "ancestors": [
-                        "citron",
-                        "mandarin"
-                    ]
-                },
-                "Meyer lemon": {
-                    "ancestors": [
-                        "citron",
-                        "sweet orange"
-                    ],
-                    "color": "yellow"
-                }
-            }
-        },
-        "lime": {
-            "ancestors": [
-                "citron",
-                "mandarin"
-            ],
-            "sub-categories": [
-                "Rangpur lime",
-                "Key lime"
-            ]
+        "Meyer lemon": {
+          "ancestors": [
+            "citron",
+            "sweet orange"
+          ],
+          "color": "yellow"
         }
+      }
+    },
+    "lime": {
+      "ancestors": [
+        "citron",
+        "mandarin"
+      ],
+      "sub-categories": [
+        "Rangpur lime",
+        "Key lime"
+      ]
     }
-
+  }
 }

@@ -14,7 +14,135 @@ setup() {
     PATH="$DIR/../src:$PATH"
 
     CARNIVORA_JSON=$DIR/carnivora.json
+    CITRUS_JSON=$DIR/citrus.json
     ODD_VALUES_JSON=$DIR/odd-values.json
+}
+
+
+
+# mode selection: -f
+@test "[31] JQG_OPTS : mode selection: -f" {
+    export JQG_OPTS="-f"
+    run jqg rangpur $CITRUS_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "hybrid.lime.sub-categories.0": "Rangpur lime"
+}
+EOF
+}
+
+# mode selection: -s
+@test "[31] JQG_OPTS : mode selection: -s" {
+    export JQG_OPTS="-s"
+    run jqg rangpur $CITRUS_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "hybrid.lime.sub-categories.0": "Rangpur lime"
+}
+EOF
+}
+
+# mode selection: -u
+@test "[31] JQG_OPTS : mode selection: -u" {
+    export JQG_OPTS="-u"
+    run jqg $CITRUS_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "core": [
+    "citron",
+    "mandarin",
+    "pomelo",
+    "pompeda",
+    "kumquat"
+  ],
+  "hybrid": {
+    "orange": {
+      "ancestors": [
+        "mandarin",
+        "pomelo"
+      ],
+      "sub-categories": [
+        "sweet orange",
+        "bitter orange"
+      ]
+    },
+    "grapefruit": {
+      "ancestors": [
+        "pomelo",
+        "mandarin"
+      ],
+      "sub-categories": [
+        "common grapefruit",
+        "mandelo"
+      ]
+    },
+    "lemon": {
+      "ancestors": [
+        "citron",
+        "sour orange"
+      ],
+      "related": {
+        "rough lemon": {
+          "ancestors": [
+            "citron",
+            "mandarin"
+          ]
+        },
+        "Meyer lemon": {
+          "ancestors": [
+            "citron",
+            "sweet orange"
+          ],
+          "color": "yellow"
+        }
+      }
+    },
+    "lime": {
+      "ancestors": [
+        "citron",
+        "mandarin"
+      ],
+      "sub-categories": [
+        "Rangpur lime",
+        "Key lime"
+      ]
+    }
+  }
+}
+EOF
+}
+
+# pipeline mode selection: -s
+@test "[31] JQG_OPTS : pipeline mode selection: -s" {
+    export JQG_OPTS="-s"
+    run bash -c "jqg -f rangpur $CITRUS_JSON | jqg"
+    assert_success
+    assert_output - <<EOF
+{
+  "hybrid.lime.sub-categories.0": "Rangpur lime"
+}
+EOF
+}
+
+# pipeline mode selection: -u
+@test "[31] JQG_OPTS : pipeline mode selection: -u" {
+    export JQG_OPTS="-u"
+    run bash -c "jqg -f rangpur $CITRUS_JSON | jqg"
+    assert_success
+    assert_output - <<EOF
+{
+  "hybrid": {
+    "lime": {
+      "sub-categories": [
+        "Rangpur lime"
+      ]
+    }
+  }
+}
+EOF
 }
 
 

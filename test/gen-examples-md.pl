@@ -105,116 +105,122 @@ my($in) = IO::File->new("<$BATS_FILE");
 die qq([ERROR] Cannot open "$BATS_FILE" for input - $!\n) unless $in;
 
 #***** loop through BATS file looking for examples *****
-my($HEADING_OR_START_TEST, $EXPORT_RUN_OR_SKIP, $ASSERT_OUTPUT, $EOF) = (1 .. 999);
+my($TEST_ELEMENT_OR_HEADER, $ASSERT_OUTPUT_EOF) = (1 .. 999);
 
-my($test_desc, $test_note, $test_export, $test_cmd, $test_output);
-my($looking_for) = $HEADING_OR_START_TEST;
+my($test) = undef;
+my($looking_for) = $TEST_ELEMENT_OR_HEADER;
 while (<$in>) {
     chomp;
 
     s{\$CARNIVORA_JSON}{carnivora.json}g;
     s{\$ODD_VALUES_JSON}{odd-values.json}g;
 
-    # ## Search Criteria Examples
-    if (($looking_for == $HEADING_OR_START_TEST) && (m{^\s*##\s+(.*)$})) {
-        my($header) = $1;
-
-
-        $out->say("\n[//]: # (" . ('=' x 66) . ")\n\n## $1");
-
-        next;
-    }
-
-    # @test "[99] case-insensitive search (default)" {
-    elsif (($looking_for == $HEADING_OR_START_TEST) && (m{^\s*\@test\s+"\[[^]]+]\s+(.*)"})) {
-        $test_desc = $1;
-        $looking_for = $EXPORT_RUN_OR_SKIP;
-        next;
-    }
-
-    # skip "due to a bug ..."
-    elsif (($looking_for == $EXPORT_RUN_OR_SKIP) && (m{^\s*skip\s+"([^"]+)\"})) {
-        $test_note = "**Test Skipped**: $1";
-        next;
-    }
-
-    # export JQG_OPTS="-q -S"
-    elsif (($looking_for == $EXPORT_RUN_OR_SKIP) && (m{^\s*(export .*)})) {
-        $test_export = $1;
-        next;
-    }
-
-    # run  jqg -v 'f|(?-i:M)' $CARNIVORA_JSON
-    elsif (($looking_for == $EXPORT_RUN_OR_SKIP) && (m{^\s*run\s+(jqg\s+.*)\s*$})) {
-        $test_cmd = $1;
-
-        $looking_for = $ASSERT_OUTPUT;
-        next;
-    }
-
-    # run  bash -c "jq . $CARNIVORA_JSON | jqg feli | jq -S -c"
-    elsif (($looking_for == $EXPORT_RUN_OR_SKIP) && (m{^\s*run\s+bash -c\s+"(.*)"\s*$})) {
-        $test_cmd = $1;
-
-        $looking_for = $ASSERT_OUTPUT;
-        next;
-    }
-
-    # assert_output - <<EOF
-    elsif (($looking_for == $ASSERT_OUTPUT) && (m{^\s*assert_output})) {
-        $looking_for = $EOF;
-        $test_output = [];
-        next;
-    }
-
-    # EOF
-    elsif (($looking_for == $EOF) && (m{^EOF$})) {
-        die unless $test_desc;
-        die unless scalar(@$test_output);
-        die unless $test_cmd;
-
-
-        #----- print out the test header -----
-        $out->say(<<"EOS");
+    if (($looking_for == $TEST_ELEMENT_OR_HEADER) && (m{^\s*\}\s*$})) {
+        #----- dump previous test (if any) -----
+        if ($test) {
+            $out->say(<<"EOS");
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>$test_desc</summary>
+<summary>$test->{'description'}</summary>
 EOS
 
-        #----- possible print out a note -----
-        $out->say("<p/>\n\n*$test_note*\n") if $test_note;
+            #----- loop through test elements -----
+            my($codeblock_opened) = 0;
+            foreach my $elem (@{$test->{'elements'}}) {
+                my($element_type) = $elem->[0];
+                my($element_value) = $elem->[1];
 
-        #----- start the example -----
-        $out->say("```json");
+                #----- possible print out a note -----
+                if ($element_type eq "skip") {
+                    $out->say("```\n\n") if $codeblock_opened;
+                    $codeblock_opened = 0;
 
-        #----- possible print out export line -----
-        $out->say("\$ $test_export") if $test_export;
+                    $out->say("<p/>\n\n**Test Skipped - ** *$element_value*\n");
+                    next;
+                }
 
-        #----- normal test -----
-        $out->say("\$ $test_cmd");
+                #----- start the example -----
+                $out->say("```bash") unless $codeblock_opened++;
 
-        #----- print expected output -----
-        foreach my $line (@$test_output) {
-            $out->say($line);
+                #----- print out comments -----
+                if ($element_type eq "#") {
+                    $out->say("$element_type $element_value");
+                }
+
+                #----- print out exports -----
+                elsif ($element_type eq "export") {
+                    $out->say("\$ $element_type $element_value");
+                }
+
+                #----- print out command lines -----
+                elsif ($element_type eq "run") {
+                    $out->say("\$ $element_value");
+                }
+
+                #----- print out JSON output -----
+                elsif ($element_type eq "output") {
+                    $out->say($element_value);
+                }
+                else {
+                    die qq([ERROR] Unknown test element: [ $element_type : $element_value ]\n);
+                }
+            }
+
+            #----- print test footer -----
+            $out->say("```\n") if $codeblock_opened;
+            $out->say("</details>");
+
+            $test = undef;
         }
+    }
 
-        #----- print test footer -----
-        $out->say("```\n\n</details>");
+    # ## Search Criteria Examples
+    elsif (($looking_for == $TEST_ELEMENT_OR_HEADER) && (m{^\s*##\s+(.*)$})) {
+        my($header) = $1;
 
-        #----- clear out test vars -----
-        $test_desc = $test_note = $test_export = $test_cmd = $test_output = undef;
+        $out->say("\n[//]: # (" . ('=' x 66) . ")\n\n## $header");
 
-        #----- search for next one -----
-        $looking_for = $HEADING_OR_START_TEST;
+        $test = undef;
+    }
 
-        next;
+    # @test "[99] case-insensitive search (default)" {
+    elsif (($looking_for == $TEST_ELEMENT_OR_HEADER) && (m{^\s*\@test\s+"\[[^]]+]\s+(.*)"})) {
+        my($test_desc) = $1;
+
+        $test = { description => $test_desc, elements => [] };
+    }
+
+    # (various test elements)
+    elsif (($looking_for == $TEST_ELEMENT_OR_HEADER) &&
+           ((m{^\s*(#)\s*(.*?)\s*$}) ||                 # # some comment
+            (m{^\s*(skip)\s+"([^"]+)\"}) ||             # skip "due to a bug ..."
+            (m{^\s*(export)\s+(.*)\s*$}) ||             # export JQG_OPTS="-q -S"
+            (m{^\s*(run)\s+bash\s+-c\s+"(.*)"\s*$}) ||  # run  bash -c "jq . $CARNIVORA_JSON | jqg feli | jq -S -c"
+            (m{^\s*(run)\s+(jqg\s+.*)\s*$}))) {         # run  jqg -v 'f|(?-i:M)' $CARNIVORA_JSON
+        my($element_type) = $1;
+        my($element_value) = $2;
+
+        #----- skip if comment & not inside of a test -----
+        next if (($element_type eq "#") && (! $test));
+
+        #----- save off everything else -----
+        push(@{$test->{'elements'}}, [$element_type, $element_value]);
+    }
+
+    # assert_output - <<EOF
+    elsif (($looking_for == $TEST_ELEMENT_OR_HEADER) && (m{^\s*assert_output})) {
+        $looking_for = $ASSERT_OUTPUT_EOF;
+    }
+
+    # EOF
+    elsif (($looking_for == $ASSERT_OUTPUT_EOF) && (m{^EOF$})) {
+        $looking_for = $TEST_ELEMENT_OR_HEADER;
     }
 
     # (accumulating output)
-    elsif ($looking_for == $EOF) {
-        push(@$test_output, $_);
-        next;
+    elsif ($looking_for == $ASSERT_OUTPUT_EOF) {
+        push(@{$test->{'elements'}}, ["output", $_]);
     }
 }
 

@@ -111,3 +111,30 @@ EOF
 }
 EOF
 }
+
+# sparse array (include)
+@test "[50] sparse array" {
+    run jqg four $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "four.0": "first",
+  "four.1": null,
+  "four.2": {},
+  "four.3": "fourth"
+}
+EOF
+}
+
+# sparse array (exclude)
+@test "[50] sparse array(exclude)" {
+    run jqg -E four $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "four.0": "first",
+  "four.1": null,
+  "four.3": "fourth"
+}
+EOF
+}

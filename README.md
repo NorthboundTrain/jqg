@@ -1,4 +1,4 @@
-# `jqg` - search flattened JSON using `jq`
+# `jqg` - search flattened JSON using `jq`; alternately, unflatten structured JSON
 
 [![BATS](https://github.com/NorthboundTrain/jqg/actions/workflows/bats.yml/badge.svg)](https://github.com/NorthboundTrain/jqg/actions/workflows/bats.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://github.com/NorthboundTrain/jqg/LICENSE)
@@ -10,6 +10,8 @@
 JSON is an inherently hierarchical structure, which makes searching it for path information difficult. The JQG script flattens the hierarchical structure so that the path for each JSON end node is represented as a single string, thereby enabling easy searching producing contextually meaningful results.
 
 For searching, JQG uses the [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions) engine built into JQ, which is much more powerful than `grep` or `egrep` (and it's certainly easier to use). For added flexibility, JQG can read from STDIN instead of from a file, allowing it to be used in pipelines, too. Finally, there are many options to control what is searched and how, as well as the format of the output.
+
+<details><summary>example JSON: `odd-values.json`</summary>
 
 ```none
 $ jq . odd-values.json
@@ -43,11 +45,19 @@ $ jq . odd-values.json
     "empty-object": {},
     "empty-array": []
   },
+  "four": [
+    "first",
+    null,
+    {},
+    "fourth"
+  ],
   "end-string": "bar"
 }
+```
 
+</details>
 
-
+```none
 # some not-too-useful grep results
 $ jq . odd-values.json | grep string
     "start-string": "foo",
@@ -80,7 +90,8 @@ $ jqg 0 odd-values.json
   "two.0.two-a.non-integer-number": -101.75,
   "two.0.two-a.number-zero": 0,
   "two.0.true-boolean": true,
-  "two.0.two-b.false-boolean": false
+  "two.0.two-b.false-boolean": false,
+  "four.0": "first"
 }
 
 $ jqg 'int|false' odd-values.json
@@ -107,11 +118,42 @@ $ jqg -v '(?<!\d)0|\[]' odd-values.json
 }
 
 
+
 # can be used in pipelines, too
 $ curl -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/test/odd-values.json | jqg -v '(?<!\d)0|\[]'
 {
   "two.0.two-a.number-zero": 0,
   "three.empty-array": []
+}
+```
+
+JQG can also unflatten JSON that has been previously flattened (or structured to look that way).
+
+```none
+# flatten & search
+$ jqg 'int|false' odd-values.json
+{
+  "one.integer-number": 101,
+  "two.two-a.non-integer-number": -101.75,
+  "two.two-b.false-boolean": false
+}
+
+# flatten & search, then unflatten
+$ jqg 'int|false' odd-values.json | jqg -u
+{
+  "one": {
+    "integer-number": 101
+  },
+  "two": [
+    {
+      "two-a": {
+        "non-integer-number": -101.75
+      },
+      "two-b": {
+        "false-boolean": false
+      }
+    }
+  ]
 }
 ```
 
@@ -179,11 +221,16 @@ git clone --recurse-submodules git@github.com:NorthboundTrain/jqg.git
 
 Execute JQG against a specific JSON file:
 
-`jqg search-string foo.json`
+```none
+jqg search-string foo.json
+jqg --unflatten flat.json
+```
 
 Execute JQG in a pipeline:
 
-`curl -s 'https://api.github.com/repos/NorthboundTrain/jqg' | jqg 'name|count'`
+```none
+curl -s 'https://api.github.com/repos/NorthboundTrain/jqg' | jqg 'name|count'
+```
 
 ## Documentation & Examples
 
@@ -193,11 +240,13 @@ Execute JQG in a pipeline:
 
 ## Version History
 
-see [CHANGELOG](CHANGELOG.md)
+see [CHANGELOG.md](CHANGELOG.md)
 
 ## Acknowledgements
 
 The filters to convert the hierarchical structure of JSON into a flat structure are largely based on a blog post from [Fabian Keller](https://www.fabian-keller.de/about/) entitled [5 Useful jq Commands to Parse JSON on the CLI](https://www.fabian-keller.de/blog/5-useful-jq-commands-parse-json-cli/).
+
+The core of the unflatten filter is taken from a [StackOverflow answer](https://stackoverflow.com/a/69650189) given by user [pmf](https://stackoverflow.com/users/2158479/pmf).
 
 This project uses code from the following projects:
 

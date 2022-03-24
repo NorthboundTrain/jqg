@@ -1,6 +1,6 @@
 # The `jqg` Filter - Explained
 
-A JQ program is really a series of filters that data goes through, transforming the input according the rules of the filter being executed, producing some output, which is then passed along to the next filter, or presented as the end result. The JQ syntax itself is pretty dense stuff, and the JQG filter is pretty complicated for a JQ newbie like me to understand, and it wasn't at all intuitive (to me, at least) what was happening and why through most of the steps.
+A JQ program is really a series of filters that data goes through, transforming the input according the rules of the filter being executed, producing some output, which is then passed along to the next filter, or presented as the end result. The JQ syntax itself is pretty dense stuff, and the JQG flatten & search filter is pretty complicated for a JQ newbie like me to understand, and it wasn't at all intuitive (to me, at least) what was happening and why through most of the steps.
 
 I wrote this document as much for my own edification as anything else; I got some elements of the JQG filter to work through trial and error, without a full understanding of why it did or didn't work as expected. This helped me understand the whole thing.
 
@@ -30,11 +30,11 @@ The explanation below will reference the following JSON snippet:
 }
 ```
 
-## The JQG Filter
+## <a name="flatten_and_search"></a>The Flatten & Search Filter
 
-Below is the JQ filter used in JQG. There are three primary filters, one to flatten the JSON, one to search it, and then one to format the output. There are four named functions defined, each of which is comprised of multiple filters. Functions themselves just collect together a group of filters, which is good to help keep it all organized and reduce code duplication.
+Below is the main JQ filter used in JQG. There are three primary filters, one to flatten the JSON, one to search it, and then one to format the output. There are four named functions defined, each of which is comprised of multiple filters. Functions themselves just collect together a group of filters, which is good to help keep it all organized and reduce code duplication.
 
-There are two types of variables defined here: JQ variables (shown all in lower case) and BASH variables (shown all in UPPER CASE, and referred to below **`$LIKE_SO`**). In the real JQG script, the filter is escaped properly to make it through the shell into JQ, but here it's presented so that you can cut and paste it into [jqplay](https://jqplay.org/) as easily as possible. The **`$EMBEDDED_SHELL_VARIABLES`** will cause the tool problems, of course, but just replace as appropriate and you should be good to go (see the `--debug` command-line option to JQG for help with this).
+There are two types of variables defined here: JQ variables (shown all in lower case) and BASH variables (shown all in UPPER CASE, and referred to below **`$LIKE_SO`**). In the real JQG script, the filter is escaped properly to make it through the shell into JQ, but here it's presented so that you can cut and paste it into [jqplay](https://jqplay.org/) as easily as possible. The **`$EMBEDDED_SHELL_VARIABLES`** will cause the tool problems, of course, but just replace as appropriate and you should be good to go (use the JQG `--debug` command-line option to help with this).
 
 ```jq
 def empty_leafs: select(tostring | . == "{}" or . == "[]");
@@ -202,7 +202,7 @@ References:
 
 ---
 
-### [`filter_json`] Filter Segment #1: `to_entries |`
+### <a name="filter_json_segment_1"></a>[`filter_json`] Filter Segment #1: `to_entries |`
 
 Up until this point, we've done nothing more than flatten the JSON structure, transforming the arbitrarily complex JSON input into a single object with only one layer in it, comprised of lines each representing an end-node of the input JSON. Now we will transform it once again and feed it into the segment that starts to implement the filtering process.
 
@@ -237,7 +237,7 @@ References:
 
 ### [`filter_json`] Filter Segment #2: `map(select($SEARCH_ELEM | tostring | test("$REGEX"; "${CASE_REGEX}xn"))) |`
 
-There are a bunch of **`$EMBEDDED_SHELL_VARIABLES`** here; let's look at them first.
+There are a number of **`$EMBEDDED_SHELL_VARIABLES`** here; let's look at them first.
 
 **`$SEARCH_ELEM`** - this variable is set based on the `-k`, `-v`, and `-a` options for JQG; these options control whether the script is searching through keys, values, or both (all), respectively. If searching keys, **`$SEARCH_ELEM`** is set to use the `.key` filter; it's set to `.value` if searching values, and `.[]` for both keys and values. All three filters work on JSON objects, which are made up of key/value pairs. The first two return the value found by looking up the name given in the JSON object being looked at, or null otherwise, whereas the last one (`.[]`) iterates over all values in the object. What makes it confusing is that at the start of the filter in this segment our input is an array of objects all of which are comprised of two key/value pairs, one with a key of "key" and one with a key of "value" -- see the previous segment explanation for details.
 
@@ -303,3 +303,242 @@ References:
 [Array Iterator](https://stedolan.github.io/jq/manual/#Array/ObjectValueIterator:.[]),
 [Identity ('`.`')](https://stedolan.github.io/jq/manual/#Identity:.),
 [raw output](https://stedolan.github.io/jq/manual/#Invokingjq)
+
+## The Unflatten Filter
+
+The filter used to reverse the flattening process is shown below. It's pretty simple by comparison to the main filters used to flatten and search, but it is odd code nonetheless if you're not used to the JQ syntax. See the intro under [The Flatten & Search Filter](#flatten_and_search) for a general description of JQ filters and the syntax used on this page.
+
+```jq
+def unflatten_json:
+    reduce to_entries[] as $element
+        (null; setpath($element.key / "$JOIN_CHAR" | map(tonumber? // .); $element.value));
+
+unflatten_json
+```
+
+---
+
+### Filter Overview: `unflatten_json`
+
+At a super-high level, we define one function and then call it. A reasonable question to ask is: if there's only one function, why bother? The only answer I can give is because after 30+ years programming I know that nothing ever stays as simple as it first appears, so I try and plan for the future when I'll want to use this function in strange and unanticipated ways.
+
+The filter will turn flattened JSON like this:
+
+```json
+{
+  "cat.domesticated.0.petname": "Fluffy",
+  "cat.domesticated.0.breed": "Bengal",
+  "cat.domesticated.1.petname": "Misty",
+  "cat.domesticated.1.breed": "domestic short hair",
+  "cat.domesticated.1.color": "yellow"
+}
+```
+
+and turn it into regular JSON:
+
+````json
+{
+  "cat": {
+    "domesticated": [
+      {
+        "petname": "Fluffy",
+        "breed": "Bengal"
+      },
+      {
+        "petname": "Misty",
+        "breed": "domestic short hair",
+        "color": "yellow"
+      }
+    ]
+  }
+}
+````
+
+---
+
+### [`unflatten_json`] Filter Segment: `reduce to_entries[] as $element`
+
+The `reduce` filter is a looping mechanism that accumulates its results. The general form of it is: `reduce EXPRESSION as $VAR (STARTING_VALUE; MUTATOR)`. The `EXPRESSION` will produce a set of results, and each element will be iterated over, storing the current element in the JQ variable `$VAR` for each loop. The `MUTATOR` expression will be evaluated with the current value of `$VAR` and the results accumulated; these accumulated results, initialized at the start of the `reduce` expression with `STARTING_VALUE`, are what passes out of the `reduce` filter.
+
+Our `EXPRESSION` is `to_entries[]`, which is a shorthand way of saying `to_entries | .[]`. See the [explanation above](#filter_json_segment_1) for what `to_entries` does; basically it produces an array of objects each with two elements, one named `key` and one named `value`. The key/value array output of it is then iterated over one at a time (using the Array/Object Value Iterator, '`.[]`'), with `$element` being set to each key/value pair in turn.
+
+References:
+[reduce](https://stedolan.github.io/jq/manual/#Reduce),
+[to_entries](https://stedolan.github.io/jq/manual/#to_entries,from_entries,with_entries),
+[Array/Object Value Iterator ('`.[]`')](https://stedolan.github.io/jq/manual/#Array/ObjectValueIterator:.[])
+
+---
+
+### [`unflatten_json`] Filter Segment: `(null; setpath(...))`
+
+This is the segment of the `reduce` expression that accumulates the results of the loop, mapping to `(STARTING_VALUE; MUTATOR)` (see the previous section for a description of what this piece of the filter is actually looping through). The accumulated results are initialized with the value of `STARTING_VALUE`, and `MUTATOR` is run once for each loop iteration (with the current value of the loop stored in `$VAR`).
+
+For us, `STARTING_VALUE` is the JSON value `null`, and `MUTATOR` is the `setpath()` filter. The input to `setpath` is the accumulated results (in `.`, though to use it inside of `setpath` you would need to save it off via the Variable Binding Operator), and the output is an array or object which will be added to the accumulated results (because `setpath` is `reduce`'s `MUTATOR`). That sounds way more complicated than it really is; `setpath` returns an array or object which `reduce` concatenates to or merges with the previous array or object -- I should have just said that to begin with. The `setpath` function will be described in more detail in the next section.
+
+References:
+[null](https://www.rfc-editor.org/rfc/rfc8259.html#section-1) (rfc8259),
+[setpath](https://stedolan.github.io/jq/manual/#setpath(PATHS;VALUE)),
+[Identity ('`.`')](https://stedolan.github.io/jq/manual/#Identity:.),
+[Variable/Symbolic Binding Operator](https://stedolan.github.io/jq/manual/#Variable/SymbolicBindingOperator:...as$identifier|...),
+
+---
+
+### [`unflatten_json`] Overview: `setpath(PATHS; VALUE)`
+
+Generically, `setpath` will set the array or object elements described by `PATHS` to `VALUE` and then do something with it in the context of the overall filter. Examples make this easier; the following `setpath`:
+
+```none
+setpath(["foo", "bar"]; "baz")
+```
+
+will generate this JSON:
+
+```json
+"foo": {
+  "bar": "baz"
+}
+```
+
+To put it into some context, using this as the original input:
+
+```json
+{
+    "hello": "world"
+}
+```
+
+if that `setpath` is our only filter, it would produce the following results:
+
+```json
+{
+  "hello": "world",
+  "foo": {
+    "bar": "baz"
+  }
+}
+```
+
+This can handle arrays, too:
+
+```json
+# original input
+{
+    "hello": "world"
+}
+
+# filter: setpath(["foo", "bar", 0]; "baz")
+
+# output
+{
+  "hello": "world",
+  "foo": {
+    "bar": [
+      "baz"
+    ]
+  }
+}
+```
+
+even top-level arrays:
+
+```json
+# original input
+[
+  {
+    "hello": "world"
+  }
+]
+
+# filter: setpath([0, "foo", "bar"]; "baz")
+
+# output
+[
+  {
+    "hello": "world",
+    "foo": {
+      "bar": "baz"
+    }
+  }
+]
+
+# alternate filter: setpath([1, "foo", "bar"]; "baz")
+
+# output
+[
+  {
+    "hello": "world"
+  },
+  {
+    "foo": {
+      "bar": "baz"
+    }
+  }
+]
+```
+
+It will also overwrite a value already present:
+
+```json
+# input
+{
+  "foo": {
+    "bar": true
+  }
+}
+
+# filter: setpath(["foo", "bar"]; "baz")
+
+# output
+{
+  "foo": {
+    "bar": "baz"
+  }
+}
+```
+
+References:
+[setpath](https://stedolan.github.io/jq/manual/#setpath(PATHS;VALUE))
+
+---
+
+### [`unflatten_json`] Filter Segment: `setpath($element.key / "$JOIN_CHAR" | map(tonumber? // .); $element.value)`
+
+Inside of `setpath` the filter accesses the object stored in the JQ variable `$element`. This variable holds an object with two elements, one named `key` and one named `value`. The one named `key` will have the key string of the current line being processed, the one named `value` will have the value string of the current line being processed, e.g. for the first line:
+
+```json
+{
+  "key": "cat.domesticated.0.petname",
+  "value": "Fluffy"
+}
+```
+
+The '`/`' is the normal division operator, only in this case it's one string divided by another, effectively splitting the source string into an array of one or more strings. The divisor string is stored in the shell variable **`$JOIN_CHAR`**, which is '`.`' by default, and can be set using the `-j <str>` option. In the example above, the value of the `key` element (`"cat.domesticated.0.petname"`) is split by '`.`', resulting in the following array:
+
+```json
+[
+  "cat",
+  "domesticated",
+  "0",
+  "petname"
+]
+```
+
+This array is sent through `map()`, which simply iterates over each element of the array (passed through `map` via '`.`'), sending it through the filter inside of the parenthesis. `tonumber` will convert the string passed to it into a number, throwing an error if it's not a number; the '`?`' suppresses that error, and the '`//`' will use the original value ('`.`') instead. All of which converts the above array into this:
+
+```json
+[
+  "cat",
+  "domesticated",
+  0,
+  "petname"
+]
+```
+
+See the previous section for how `setpath` will use this array.
+
+[slash ('`/`')](https://stedolan.github.io/jq/manual/#Multiplication,division,modulo:*,/,and%),
+[map](https://stedolan.github.io/jq/manual/#map(x),map_values(x)),
+[tonumber](https://stedolan.github.io/jq/manual/#tonumber),
+[Error Suppression/Optional Operator ('`?`')](https://stedolan.github.io/jq/manual/#ErrorSuppression/OptionalOperator:?),
+[Alternative operator ('`//`')](https://stedolan.github.io/jq/manual/#Alternativeoperator://),
+[Identity ('`.`')](https://stedolan.github.io/jq/manual/#Identity:.)

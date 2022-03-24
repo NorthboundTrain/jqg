@@ -36,6 +36,7 @@ setup() {
 
 @test "[01] check for test JSON files" {
     assert_file_exist $DIR/carnivora.json
+    assert_file_exist $DIR/citrus.json
     assert_file_exist $DIR/odd-values.json
 }
 

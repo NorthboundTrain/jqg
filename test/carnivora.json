@@ -1,54 +1,53 @@
 {
-    "isa": "mammal",
-    "classification": {
-        "kingdom": "animalia",
-        "phylum": "chordata",
-        "class": "mammalia"
-    },
-    "subclades": [
-        "feliformia",
-        "caniformia"
+  "isa": "mammal",
+  "classification": {
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia"
+  },
+  "subclades": [
+    "feliformia",
+    "caniformia"
+  ],
+  "cat": {
+    "isa": "feline",
+    "feral": [
+      {
+        "species": "lion",
+        "aka": "king of the beasts"
+      },
+      {
+        "species": "Bengal tiger"
+      },
+      {
+        "species": "black-footed cat",
+        "aka": "felis nigripes"
+      }
     ],
-    "cat": {
-        "isa": "feline",
-        "feral": [
-            {
-                "species": "lion",
-                "aka": "king of the beasts"
-            },
-            {
-                "species": "Bengal tiger"
-            },
-            {
-                "species": "black-footed cat",
-                "aka": "felis nigripes"
-            }
-        ],
-        "domesticated": [
-            {
-                "petname": "Fluffy",
-                "breed": "Bengal",
-                "color": ""
-            },
-            {
-                "petname": "Misty",
-                "breed": "domestic short hair",
-                "color": "yellow"
-            }
-        ]
-    },
-    "dog": [
-        {
-            "petname": "Growler",
-            "breed": "mutt"
-        },
-        {
-            "petname": "Tiger",
-            "breed": "yellow labrador",
-            "feral": true,
-            "type": "domesticated"
-        },
-        {
-        }
+    "domesticated": [
+      {
+        "petname": "Fluffy",
+        "breed": "Bengal",
+        "color": ""
+      },
+      {
+        "petname": "Misty",
+        "breed": "domestic short hair",
+        "color": "yellow"
+      }
     ]
+  },
+  "dog": [
+    {
+      "petname": "Growler",
+      "breed": "mutt"
+    },
+    {
+      "petname": "Tiger",
+      "breed": "yellow labrador",
+      "feral": true,
+      "type": "domesticated"
+    },
+    {}
+  ]
 }

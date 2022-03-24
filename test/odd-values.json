@@ -28,5 +28,11 @@
     "empty-object": {},
     "empty-array": []
   },
+  "four": [
+    "first",
+    null,
+    {},
+    "fourth"
+  ],
   "end-string": "bar"
 }

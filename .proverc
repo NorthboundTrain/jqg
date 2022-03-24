@@ -1,0 +1,2 @@
+--exec test/bats/bin/bats
+--ext bats

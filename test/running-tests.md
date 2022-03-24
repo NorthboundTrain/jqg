@@ -3,15 +3,15 @@
 ## `jqg`'s Unit Tests
 
 JQG includes a suite of unit tests to help ensure that future code
-changes do not break current capabilities. As of this writing, there are almost
-180 tests that run in 43 second on my development machine -- not the largest
+changes do not break current capabilities. As of this writing, there are
+220+ tests that run in around 50 seconds on my development machine -- not the largest
 or fastest test suite out there, by a long shot, but it meets the project's needs.
 
 ## Installing `bats`
 
 The tests are part of the repo, so if you've cloned that already then you have
 them. However, you'll also need to install the
-[`bats`](https://github.com/sstephenson/bats#readme) framework, too. This can
+[`bats`](https://github.com/bats-core/bats-core) framework, too. This can
 be done by doing the initial clone with the `--recurse-submodules` option:
 
 ```none
@@ -44,7 +44,7 @@ $ test/bats/bin/bats test/[235]*
 $ test/bats/bin/bats test/31-jqg-opts-envvar.bats --filter separator
 
 # run using Perl's prove TAP harness
-$ prove --exec test/bats/bin/bats -t test/*.bats
+$ prove test/*.bats
 ```
 
 ## Additional Testing & Reporting Bugs
@@ -55,5 +55,5 @@ or submit a pull request.
 
 ## SEE ALSO
 
-* [`bats`](https://github.com/sstephenson/bats#readme) - Bash Automated Testing System
+* [`bats`](https://github.com/bats-core/bats-core) - Bash Automated Testing System
 * [`prove`](https://perldoc.perl.org/prove) - Run tests through a TAP harness

@@ -418,6 +418,10 @@ EOF
   "three.empty-string": "",
   "three.empty-object": {},
   "three.empty-array": [],
+  "four.0": "first",
+  "four.1": null,
+  "four.2": {},
+  "four.3": "fourth",
   "end-string": "bar"
 }
 EOF
@@ -431,6 +435,10 @@ EOF
     assert_output - <<EOF
 {
   "end-string": "bar",
+  "four.0": "first",
+  "four.1": null,
+  "four.2": {},
+  "four.3": "fourth",
   "one.integer-number": 101,
   "one.null-value": null,
   "one.start-string": "foo",
@@ -451,6 +459,7 @@ EOF
 
 #==================================================================
 ## Regex / PCRE Examples
+
 
 # search for values containing numbers
 @test "[99] search for values containing numbers" {
@@ -628,6 +637,162 @@ EOF
   "cat.domesticated.1.breed": "domestic short hair",
   "dog.0.breed": "mutt",
   "dog.1.type": "domesticated"
+}
+EOF
+}
+
+
+#==================================================================
+## Unflatten Mode Examples
+
+# flatten and unflatten JSON
+@test "[99] flatten and unflatten JSON" {
+    # example of filtered, flattened output
+    run  jqg four $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "four.0": "first",
+  "four.1": null,
+  "four.2": {},
+  "four.3": "fourth"
+}
+EOF
+
+    # same output, unflattened
+    run bash -c "jqg four $ODD_VALUES_JSON | jqg -u"
+    assert_success
+    assert_output - <<EOF
+{
+  "four": [
+    "first",
+    null,
+    {},
+    "fourth"
+  ]
+}
+EOF
+}
+
+
+# flatten and unflatten JSON containing sparse array
+@test "[99] flatten and unflatten JSON containing sparse array" {
+    # example of filtered, flattened non-empty output
+    run  jqg -E four $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "four.0": "first",
+  "four.1": null,
+  "four.3": "fourth"
+}
+EOF
+
+    # same output, unflattened
+    run bash -c "jqg -E four $ODD_VALUES_JSON | jqg -u"
+    assert_success
+    assert_output - <<EOF
+{
+  "four": [
+    "first",
+    null,
+    null,
+    "fourth"
+  ]
+}
+EOF
+}
+
+
+# flatten and unflatten JSON using ^
+@test "[99] flatten and unflatten JSON using non-default join character" {
+    # example of filtered, flattened output, keys joined with '^'
+    run  jqg -j ^ two $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "two^0^two-a^non-integer-number": -101.75,
+  "two^0^two-a^number-zero": 0,
+  "two^0^true-boolean": true,
+  "two^0^two-b^false-boolean": false,
+  "two^1^two-c^alpha-num-1": "a1",
+  "two^1^two-c^alpha-num-2": "2b",
+  "two^1^two-c^alpha-num-3": "a12b"
+}
+EOF
+
+    # same output, unflattened
+    run bash -c "jqg -j ^ two $ODD_VALUES_JSON | jqg -u -j ^"
+    assert_success
+    assert_output - <<EOF
+{
+  "two": [
+    {
+      "two-a": {
+        "non-integer-number": -101.75,
+        "number-zero": 0
+      },
+      "true-boolean": true,
+      "two-b": {
+        "false-boolean": false
+      }
+    },
+    {
+      "two-c": {
+        "alpha-num-1": "a1",
+        "alpha-num-2": "2b",
+        "alpha-num-3": "a12b"
+      }
+    }
+  ]
+}
+EOF
+}
+
+
+# flatten and unflatten JSON using +
+@test "[99] flatten and unflatten JSON using JQG_OPTS" {
+    # example of filtered, flattened output, keys joined with '+'
+    export JQG_OPTS='-j +'
+    run  jqg two $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "two+0+two-a+non-integer-number": -101.75,
+  "two+0+two-a+number-zero": 0,
+  "two+0+true-boolean": true,
+  "two+0+two-b+false-boolean": false,
+  "two+1+two-c+alpha-num-1": "a1",
+  "two+1+two-c+alpha-num-2": "2b",
+  "two+1+two-c+alpha-num-3": "a12b"
+}
+EOF
+
+    # same output, unflattened
+    export JQG_OPTS='-j +'
+    run bash -c "jqg two $ODD_VALUES_JSON | jqg -u"
+    assert_success
+    assert_output - <<EOF
+{
+  "two": [
+    {
+      "two-a": {
+        "non-integer-number": -101.75,
+        "number-zero": 0
+      },
+      "true-boolean": true,
+      "two-b": {
+        "false-boolean": false
+      }
+    },
+    {
+      "two-c": {
+        "alpha-num-1": "a1",
+        "alpha-num-2": "2b",
+        "alpha-num-3": "a12b"
+      }
+    }
+  ]
 }
 EOF
 }

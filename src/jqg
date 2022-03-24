@@ -20,19 +20,19 @@
 #***************************************************************************
 
 main() {
-#echo -n "#1: "; echo "$@"
     #***** parse command line options *****
     #----- process $JQ_OPTS before those typed in -----
     read -ra JQG_OPTS_ARRAY <<< "$JQG_OPTS"
-    _getopt=$(pgetopt --options iIkvarRKVAeEj:Jq:Qdh --long ignore_case,match_case,keys,values,all,raw,json,searchkeys,searchvalues,searchall,include_empty,exclude_empty,join:,join_colon,jqopt:,clear,debug,help,bug --name 'jqg' -- "${JQG_OPTS_ARRAY[@]}" "$@"); rc=$?
-    if [[ $rc != 0 ]] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+    _getopt=$(pgetopt --options fsuiIkvarKVAReEj:Jq:Qdh --long flatten,search,unflatten,ignore_case,match_case,keys,values,all,raw,searchkeys,searchvalues,searchall,json,include_empty,exclude_empty,join:,join_colon,jqopt:,clear,debug,help,bug --name 'jqg' -- "${JQG_OPTS_ARRAY[@]}" "$@"); grc=$?
+    if [[ $grc != 0 ]] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
     eval set -- "$_getopt"
 
-#echo -n "#2: "; echo "$@"
+    #***** release version *****
+    jqg_version="v1.2.0"
+
     #***** determine JQ binary *****
     jq_bin=${JQ_BIN:-jq}
-    jqg_version="v1.1.3"
 
     #***** set default options *****
     def_join_char="."
@@ -51,11 +51,17 @@ main() {
 
     jqflags=
     jqraw=
+    mode=jqg
 
-#echo -n "#3: "; echo "$@"
     #***** finish processing the options *****
     while true; do
         case "$1" in
+        # mode selection
+            -f | --flatten ) mode=jqg; shift ;;
+            -s | --search ) mode=jqg; shift ;;
+            -u | --unflatten ) mode=unflatten; shift ;;
+
+        # mode == jqg
             -i | --ignore_case ) case_regex=$def_case_flag; shift ;;
             -I | --match_case ) case_regex=; shift ;;
 
@@ -67,20 +73,29 @@ main() {
             -V | --values ) out_filter='[ .[] ]'; shift ;;
             -A | --all ) out_filter=$def_output_filter; shift ;;
 
-            -j | --join ) join_char="$2"; shift 2 ;;
-            -J | --join_colon ) join_char=':'; shift ;;
-
             -e | --include_empty ) empty_tests=$def_empty_tests; shift ;;
             -E | --exclude_empty ) empty_tests=false; shift ;;
 
             -r | --raw ) jqraw='-r'; strip_array='.[]'; shift ;;
             -R | --json ) jqraw=; strip_array=$def_strip_array; shift ;;
 
+        # mode == (jqg || unflatten)
+            -j | --join ) join_char="$2"; shift 2 ;;
+            -J | --join_colon ) join_char=':'; shift ;;
+
             -q | --jqopt ) jqflags="$jqflags $2"; shift 2 ;;
             -Q | --clear ) jqflags=; shift ;;
 
+        # mode == common
             -d | --debug ) debug=true; shift ;;
-            -h | --help ) echo; echo "usage: jqg [-i|-I] [-a|-k|-v] [-A|-K|-V] [-j=.|-J] [-R|-r] [-e|-E] [-q <opt>] [-Q] [-d] [--bug] [REGEX [FNAME]]"; exit 0 ;;
+            -h | --help )
+                echo
+                echo "usage: jqg [-f|-s] [-i|-I] [-a|-k|-v] [-A|-K|-V] [-j=.|-J] [-R|-r] [-e|-E] [-q <opt>] [-Q] [-d] [--bug] [REGEX [FNAME]]"
+                echo "usage: jqg -u [-j=.|-J] [-q <opt>] [-Q] [-d] [FNAME]"
+                echo "usage: jqg --bug"
+                echo "usage: jqg -h"
+                exit 0
+                ;;
 
             --bug )
                 echo
@@ -107,7 +122,30 @@ main() {
         esac
     done
 
-#echo -n "#4: "; echo "$@"
+    case "$mode" in
+        "unflatten" ) unflatten_mode "$@" ;;
+        "jqg" ) standard_mode "$@" ;;
+        * ) echo "[ERROR] Unknown mode <$mode> - abending..."; exit 1 ;;
+    esac
+}
+
+
+unflatten_mode()
+{
+    #***** setup JQ filter *****
+    read -r -d '' filter <<EOF
+def unflatten_json:
+    reduce to_entries[] as \$element
+        (null; setpath(\$element.key / "$join_char" | map(tonumber? // .); \$element.value));
+
+unflatten_json
+EOF
+
+    run_jq "$@"
+}
+
+standard_mode()
+{
     #----- special case: no -r without -V|-A -----
     if [[ "$out_filter" == "$def_output_filter" ]]; then
         strip_array=$def_strip_array
@@ -124,7 +162,6 @@ main() {
 
     #***** construct the JQ filter *****
     read -r -d '' filter <<EOF
-
 def empty_leafs: select(tostring | . == "{}" or . == "[]");
 
 def flatten_json:
@@ -143,6 +180,11 @@ def format_output: $out_filter | $strip_array;
 flatten_json | $filter_json | format_output
 EOF
 
+    run_jq "$@"
+}
+
+run_jq()
+{
     #***** debug output *****
     if [[ "$debug" == "true" ]]; then
         echo; echo; echo; echo "$filter"; echo; echo; echo

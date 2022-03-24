@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format used here is based upon [Common Changelog](https://common-changelog.org/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) guidelines.
 
+## [1.2.0] - 2022-03-23
+
+### Changed
+
+- bump BATS/* from 1.3.0 to 1.6.0
+- refactor code to support different execution modes
+- standardize [`jqg.md`](docs/jqg.md) layout
+- refactor script to generate [`jqg-examples.md`](docs/jqg-examples.md) to support more robust example content
+
+### Added
+
+- add `unflatten` mode with unit tests & examples
+- add mode-selection unit tests
+- add `.proverc` to make running unit tests with Perl's `prove` more convenient
+- add command line option to select default mode (`--flatten | --search`)
+- add tests to produce flattened sparse array output
+
+### Fixed
+
+- fix links to wrong `BATS` repo
+
 ## [1.1.3] - 2022-03-19
 
 ### Added
@@ -76,6 +97,7 @@ _Initial release candidate._
 
 [//]: # (RELEASES)
 
+[1.2.0]: https://github.com/NorthboundTrain/jqg/tree/v1.2.0
 [1.1.3]: https://github.com/NorthboundTrain/jqg/tree/v1.1.3
 [1.1.2]: https://github.com/NorthboundTrain/jqg/tree/v1.1.2
 [1.1.1]: https://github.com/NorthboundTrain/jqg/tree/v1.1.1
