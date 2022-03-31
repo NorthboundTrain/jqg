@@ -6,13 +6,13 @@
 
 ## SYNOPSIS
 
-`jqg [--flatten] [OPTIONS]... [REGEX [FILE]]`
+`jqg [--flatten] [OPTIONS]... [CRITERIA [FILE]]`
 
 `jqg --unflatten [OPTIONS]... [FILE]`
 
 ## DESCRIPTION
 
-The primary purpose of JQG is to process JSON file using JQ, searching through the content looking to match the supplied `REGEX`, displaying filtered output as a flattened structure. It can also be used without a filter to simply flatten the input. An alternate mode provides the ability to unflatten previously flattened JSON (or any JSON properly formatted). Either mode can be used with a file name or via `STDIN` (as part of a pipeline).
+The primary purpose of JQG is to flatten the supplied JSON structure using JQ and then filter the flattened structure using the supplied search `CRITERIA`. It can also be used without a filter to simply flatten the input. An alternate mode provides the ability to unflatten previously flattened JSON (or any JSON properly formatted). Either mode can be used with a file name or via `STDIN` (as part of a pipeline).
 
 ### Requirements
 
@@ -21,7 +21,7 @@ The primary purpose of JQG is to process JSON file using JQ, searching through t
 
 ### Arguments
 
-Flatten and then search JSON for the `REGEX` supplied, using '`.`' as the search criteria if not specified (which matches everything). JQG uses the [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions) engine built into JQ; see the JQ [man page](https://stedolan.github.io/jq/manual/#RegularexpressionsPCRE) for more details.
+Flatten and then search the JSON input for `CRITERIA`, using the JQ Identity filter '`.`' if no `CRITERIA` supplied, treating `CRITERIA` as a regular expression otherwise. JQG uses the [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions) engine built into JQ; see the JQ [man page](https://stedolan.github.io/jq/manual/#RegularexpressionsPCRE) for more details.
 
 `FILE` will be processed as a JSON file, reading `STDIN` if not specified.
 

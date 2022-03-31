@@ -408,6 +408,13 @@ EOF
   "one.start-string": "foo",
   "one.null-value": null,
   "one.integer-number": 101,
+  "one.string-with-pipe": "this|that",
+  "one.key|with|pipe": true,
+  "one.string-with-parens": "(this and that)",
+  "one.key(with)parens": true,
+  "one.bare-parens()": true,
+  "one.left(paren-only": true,
+  "one.unmatched-left)-paren": false,
   "two.0.two-a.non-integer-number": -101.75,
   "two.0.two-a.number-zero": 0,
   "two.0.true-boolean": true,
@@ -439,9 +446,16 @@ EOF
   "four.1": null,
   "four.2": {},
   "four.3": "fourth",
+  "one.bare-parens()": true,
   "one.integer-number": 101,
+  "one.key(with)parens": true,
+  "one.key|with|pipe": true,
+  "one.left(paren-only": true,
   "one.null-value": null,
   "one.start-string": "foo",
+  "one.string-with-parens": "(this and that)",
+  "one.string-with-pipe": "this|that",
+  "one.unmatched-left)-paren": false,
   "three.empty-array": [],
   "three.empty-object": {},
   "three.empty-string": "",
@@ -659,6 +673,44 @@ EOF
   "cat.domesticated.1.breed": "domestic short hair",
   "dog.0.breed": "mutt",
   "dog.1.type": "domesticated"
+}
+EOF
+}
+
+
+@test "[99] search for pipe literal" {
+    run jqg '\|' $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "one.string-with-pipe": "this|that",
+  "one.key|with|pipe": true
+}
+EOF
+}
+
+
+@test "[99] search for parens (either)" {
+    run jqg '\(|\)' $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "one.string-with-parens": "(this and that)",
+  "one.key(with)parens": true,
+  "one.bare-parens()": true,
+  "one.left(paren-only": true,
+  "one.unmatched-left)-paren": false
+}
+EOF
+}
+
+
+@test "[99] search for parens (both)" {
+    run jqg '\(\)' $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "one.bare-parens()": true
 }
 EOF
 }

@@ -194,7 +194,7 @@ References:
 
 ### `$FILTER_JSON`
 
-This is the piece of the JQG filter that will search through the input JSON for the string or regex requested. To simply flatten the JSON without filtering it, use the regex '`.`' (this is also the default regex if none is given). When the regex is simply '`.`', the **`$FILTER_JSON`** shell variable is set to the same thing ('`.`'). If the regex is anything else, though, then **`$FILTER_JSON`** is set to the string "filter_json", which will call a locally-defined JQ function of the same name. This function is described below.
+This is the piece of the JQG filter that will search through the input JSON for the string or regex requested. To simply flatten the JSON without filtering it, use the string '`.`' as the search criteria (this is also the default search criteria used if none is given). With that as the search criteria, the **`$FILTER_JSON`** shell variable is set to the JQ Identity filter ('`.`'), which simply returns the input unchanged. If the search criteria is anything else, though, then **`$FILTER_JSON`** is set to the string "`filter_json`", which will call a locally-defined JQ function of the same name. This function is described below.
 
 References:
 [DefiningFunctions](https://stedolan.github.io/jq/manual/#DefiningFunctions),
@@ -241,7 +241,7 @@ There are a number of **`$EMBEDDED_SHELL_VARIABLES`** here; let's look at them f
 
 **`$SEARCH_ELEM`** - this variable is set based on the `-k`, `-v`, and `-a` options for JQG; these options control whether the script is searching through keys, values, or both (all), respectively. If searching keys, **`$SEARCH_ELEM`** is set to use the `.key` filter; it's set to `.value` if searching values, and `.[]` for both keys and values. All three filters work on JSON objects, which are made up of key/value pairs. The first two return the value found by looking up the name given in the JSON object being looked at, or null otherwise, whereas the last one (`.[]`) iterates over all values in the object. What makes it confusing is that at the start of the filter in this segment our input is an array of objects all of which are comprised of two key/value pairs, one with a key of "key" and one with a key of "value" -- see the previous segment explanation for details.
 
-**`$REGEX`** -- this is the regular expression being searched for. Since JQ uses [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions), the capabilities here are vast, and are well beyond the scope of this document. Anything that JQ's PCRE engine can do can be used here.
+**`$REGEX`** -- this is the regular expression being searched for. Any string passed in is treated as if it were a regex, so any search criteria containing regex-like syntax (e.g. '`|`' or '`()`') will need to be properly escaped. Since JQ uses [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions), the capabilities here are vast, and are well beyond the scope of this document. Anything that JQ's PCRE engine can do can be used here.
 
 **`$CASE_REGEX`** -- this is simply whether or not we're doing a case-sensitive search; it will be '`i`' if we are, and blank/empty ('') if we're not.
 

@@ -19,13 +19,15 @@ setup() {
 @test "[01] run jqg -h" {
     run jqg -h </dev/null
     assert_success
-    assert_output --partial REGEX
+    assert_output --partial CRITERIA
+    assert_output --partial --bug
 }
 
 @test "[01] run jqg -h <long>" {
     run jqg --help </dev/null
     assert_success
-    assert_output --partial REGEX
+    assert_output --partial CRITERIA
+    assert_output --partial --bug
 }
 
 @test "[01] run jqg --bug" {

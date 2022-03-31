@@ -25,6 +25,8 @@ setup() {
     assert_output - <<EOF
 {
   "one.start-string": "foo",
+  "one.string-with-pipe": "this|that",
+  "one.string-with-parens": "(this and that)",
   "three.empty-string": "",
   "end-string": "bar"
 }

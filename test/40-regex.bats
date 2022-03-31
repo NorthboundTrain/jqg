@@ -19,8 +19,8 @@ setup() {
 
 
 
-# dot regex tests
-@test "[40] dot regex" {
+# dot search criteria tests
+@test "[40] dot search criteria" {
     run jqg . $CARNIVORA_JSON
     assert_success
     assert_output - <<EOF
@@ -56,7 +56,7 @@ EOF
 
 
 
-@test "[40] default regex in pipe" {
+@test "[40] default search criteria in pipe" {
     run bash -c "cat $CARNIVORA_JSON | jqg"
     assert_success
     assert_output - <<EOF
@@ -92,7 +92,7 @@ EOF
 
 
 
-@test "[40] dot regex in pipe" {
+@test "[40] dot search criteria in pipe" {
     run bash -c "cat $CARNIVORA_JSON | jqg ."
     assert_success
     assert_output - <<EOF
@@ -128,7 +128,7 @@ EOF
 
 
 
-@test "[40] missing regex" {
+@test "[40] missing search criteria" {
     run jqg "" $CARNIVORA_JSON
     assert_success
     assert_output - <<EOF
@@ -164,7 +164,7 @@ EOF
 
 
 
-@test "[40] missing regex with other options" {
+@test "[40] missing search criteria with other options" {
     run jqg -q -S "" $CARNIVORA_JSON
     assert_success
     assert_output - <<EOF
@@ -320,7 +320,7 @@ EOF
 
 
 
-@test "[40] case-insensitive two-element value search w/ REGEXP override" {
+@test "[40] case-insensitive two-element value search w/ REGEX override" {
     skip "due to a bug in JQ's Oniguruma library, this requires a post 1.6 JQ build"
     run jqg -v 'f|(?-i:M)' $CARNIVORA_JSON
     assert_success
@@ -359,7 +359,7 @@ EOF
 
 
 
-@test "[40] case-sensitive two-element value search w/ REGEXP override" {
+@test "[40] case-sensitive two-element value search w/ REGEX override" {
     run jqg -Iv 'f|(?i:M)' $CARNIVORA_JSON
     assert_success
     assert_output - <<EOF

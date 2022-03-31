@@ -5,11 +5,11 @@ All notable changes to this project will be documented in this file.
 The format used here is based upon [Common Changelog](https://common-changelog.org/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) guidelines.
 
-## [1.2.1] - 2022-03-30
+## [1.2.1] - 2022-03-31
 
 ### Changed
 
--
+- change many references to `regex` to use `search criteria` instead ([#4][gh-00004])
 
 ### Added
 
@@ -126,3 +126,4 @@ _Initial release candidate._
 [gh-00001]: https://github.com/NorthboundTrain/jqg/issues/1
 [gh-00002]: https://github.com/NorthboundTrain/jqg/issues/2
 [gh-00003]: https://github.com/NorthboundTrain/jqg/issues/3
+[gh-00004]: https://github.com/NorthboundTrain/jqg/issues/4

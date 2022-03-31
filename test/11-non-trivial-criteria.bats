@@ -32,6 +32,7 @@ setup() {
 EOF
 }
 
+
 # search for key string with embedded space
 @test "[11] search for key string with embedded space" {
     run jqg "meyer lemon" $CITRUS_JSON
@@ -44,6 +45,7 @@ EOF
 }
 EOF
 }
+
 
 # search for string with open embedded space (-v)
 @test "[11] search for string with open embedded space (-v)" {
@@ -59,6 +61,7 @@ EOF
 EOF
 }
 
+
 # search for string with leading embedded space
 @test "[11] search for string with leading open embedded space" {
     run jqg " sweet" $CITRUS_JSON
@@ -70,6 +73,7 @@ EOF
 }
 EOF
 }
+
 
 # search for string with trailing embedded space
 @test "[11] search for string with trailing open embedded space" {
@@ -83,6 +87,7 @@ EOF
 EOF
 }
 
+
 # search for string with anchored embedded space (-v)
 @test "[11] search for string with anchored embedded space (-v)" {
     run jqg -v "r orange" $CITRUS_JSON
@@ -95,6 +100,7 @@ EOF
 EOF
 }
 
+
 # search for value string with anchored embedded space
 @test "[11] search for value string with anchored embedded space" {
     run jqg "r orange" $CITRUS_JSON
@@ -106,6 +112,7 @@ EOF
 }
 EOF
 }
+
 
 # search for string with embedded hyphen
 @test "[11] search for embedded hyphen" {
@@ -122,6 +129,7 @@ EOF
 }
 EOF
 }
+
 
 # search for array element #1 only
 @test "[11] search for array elem 1" {
@@ -143,6 +151,7 @@ EOF
 EOF
 }
 
+
 # search for array element #1 only
 @test "[11] search for array elem 1 (-J)" {
     run jqg -k -J :1 $CITRUS_JSON
@@ -163,6 +172,7 @@ EOF
 EOF
 }
 
+
 # search for array element #3 only
 @test "[11] search for array elem 3 (-J)" {
     run jqg -k -J :3 $CITRUS_JSON
@@ -170,6 +180,72 @@ EOF
     assert_output - <<EOF
 {
   "core:3": "pompeda"
+}
+EOF
+}
+
+
+@test "[11] search for pipe" {
+    run jqg '\|' $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "one.string-with-pipe": "this|that",
+  "one.key|with|pipe": true
+}
+EOF
+}
+
+
+@test "[11] search for parens (left)" {
+    run jqg '\(' $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "one.string-with-parens": "(this and that)",
+  "one.key(with)parens": true,
+  "one.bare-parens()": true,
+  "one.left(paren-only": true
+}
+EOF
+}
+
+
+@test "[11] search for parens (right)" {
+    run jqg '\)' $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "one.string-with-parens": "(this and that)",
+  "one.key(with)parens": true,
+  "one.bare-parens()": true,
+  "one.unmatched-left)-paren": false
+}
+EOF
+}
+
+
+@test "[11] search for parens (either)" {
+    run jqg '\(|\)' $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "one.string-with-parens": "(this and that)",
+  "one.key(with)parens": true,
+  "one.bare-parens()": true,
+  "one.left(paren-only": true,
+  "one.unmatched-left)-paren": false
+}
+EOF
+}
+
+
+@test "[11] search for parens (both)" {
+    run jqg '\(\)' $ODD_VALUES_JSON
+    assert_success
+    assert_output - <<EOF
+{
+  "one.bare-parens()": true
 }
 EOF
 }

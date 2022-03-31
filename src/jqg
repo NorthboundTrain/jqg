@@ -90,7 +90,7 @@ main() {
             -d | --debug ) debug=true; shift ;;
             -h | --help )
                 echo
-                echo "usage: jqg [-f|-s] [-i|-I] [-a|-k|-v] [-A|-K|-V] [-j=.|-J] [-R|-r] [-e|-E] [-q <opt>] [-Q] [-d] [--bug] [REGEX [FNAME]]"
+                echo "usage: jqg [-f|-s] [-i|-I] [-a|-k|-v] [-A|-K|-V] [-j=.|-J] [-R|-r] [-e|-E] [-q <opt>] [-Q] [-d] [--bug] [CRITERIA [FNAME]]"
                 echo "usage: jqg -u [-j=.|-J] [-q <opt>] [-Q] [-d] [FNAME]"
                 echo "usage: jqg --bug"
                 echo "usage: jqg -h"
@@ -154,6 +154,7 @@ standard_mode()
     #***** grab the regular expression to search for *****
     regex=${1:-.}; shift
 
+    #----- special case when "regex" is just '.' -----
     if [[ "$regex" == "." ]]; then
         filter_json=".";
     else

@@ -79,7 +79,14 @@ These are the JSON files used in the unit test scripts. As such, the data in the
   "one": {
     "start-string": "foo",
     "null-value": null,
-    "integer-number": 101
+    "integer-number": 101,
+    "string-with-pipe": "this|that",
+    "key|with|pipe": true,
+    "string-with-parens": "(this and that)",
+    "key(with)parens": true,
+    "bare-parens()": true,
+    "left(paren-only": true,
+    "unmatched-left)-paren": false
   },
   "two": [
     {
@@ -543,6 +550,13 @@ $ jqg . odd-values.json
   "one.start-string": "foo",
   "one.null-value": null,
   "one.integer-number": 101,
+  "one.string-with-pipe": "this|that",
+  "one.key|with|pipe": true,
+  "one.string-with-parens": "(this and that)",
+  "one.key(with)parens": true,
+  "one.bare-parens()": true,
+  "one.left(paren-only": true,
+  "one.unmatched-left)-paren": false,
   "two.0.two-a.non-integer-number": -101.75,
   "two.0.two-a.number-zero": 0,
   "two.0.true-boolean": true,
@@ -575,9 +589,16 @@ $ jqg -q -S . odd-values.json
   "four.1": null,
   "four.2": {},
   "four.3": "fourth",
+  "one.bare-parens()": true,
   "one.integer-number": 101,
+  "one.key(with)parens": true,
+  "one.key|with|pipe": true,
+  "one.left(paren-only": true,
   "one.null-value": null,
   "one.start-string": "foo",
+  "one.string-with-parens": "(this and that)",
+  "one.string-with-pipe": "this|that",
+  "one.unmatched-left)-paren": false,
   "three.empty-array": [],
   "three.empty-object": {},
   "three.empty-string": "",
@@ -812,6 +833,50 @@ $ jqg -Iv 'f|(?i:M)' carnivora.json
   "cat.domesticated.1.breed": "domestic short hair",
   "dog.0.breed": "mutt",
   "dog.1.type": "domesticated"
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>search for pipe literal</summary>
+
+```bash
+$ jqg '\|' odd-values.json
+{
+  "one.string-with-pipe": "this|that",
+  "one.key|with|pipe": true
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>search for parens (either)</summary>
+
+```bash
+$ jqg '\(|\)' odd-values.json
+{
+  "one.string-with-parens": "(this and that)",
+  "one.key(with)parens": true,
+  "one.bare-parens()": true,
+  "one.left(paren-only": true,
+  "one.unmatched-left)-paren": false
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>search for parens (both)</summary>
+
+```bash
+$ jqg '\(\)' odd-values.json
+{
+  "one.bare-parens()": true
 }
 ```
 

@@ -2,7 +2,14 @@
   "one": {
     "start-string": "foo",
     "null-value": null,
-    "integer-number": 101
+    "integer-number": 101,
+    "string-with-pipe": "this|that",
+    "key|with|pipe": true,
+    "string-with-parens": "(this and that)",
+    "key(with)parens": true,
+    "bare-parens()": true,
+    "left(paren-only": true,
+    "unmatched-left)-paren": false
   },
   "two": [
     {
