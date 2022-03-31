@@ -15,7 +15,8 @@
       "sub-categories": [
         "sweet orange",
         "bitter orange"
-      ]
+      ],
+      "is sweet": true
     },
     "grapefruit": {
       "ancestors": [
@@ -25,7 +26,8 @@
       "sub-categories": [
         "common grapefruit",
         "mandelo"
-      ]
+      ],
+      "is sweet": false
     },
     "lemon": {
       "ancestors": [

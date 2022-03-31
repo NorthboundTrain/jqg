@@ -47,7 +47,7 @@ def flatten_json:
 
 def filter_json:
     to_entries |
-    map(select($SEARCH_ELEM | tostring | test("${REGEX//\/\\}"; "${CASE_REGEX}xn"))) |
+    map(select($SEARCH_ELEM | tostring | test("${REGEX//\/\\}"; "${CASE_REGEX}"))) |
     from_entries;
 
 def format_output: $OUT_FILTER | $STRIP_ARRAY;
@@ -235,7 +235,7 @@ References:
 
 ---
 
-### [`filter_json`] Filter Segment #2: `map(select($SEARCH_ELEM | tostring | test("$REGEX"; "${CASE_REGEX}xn"))) |`
+### [`filter_json`] Filter Segment #2: `map(select($SEARCH_ELEM | tostring | test("$REGEX"; "${CASE_REGEX}"))) |`
 
 There are a number of **`$EMBEDDED_SHELL_VARIABLES`** here; let's look at them first.
 

@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format used here is based upon [Common Changelog](https://common-changelog.org/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) guidelines.
 
+## [1.2.1] - 2022-03-30
+
+### Changed
+
+-
+
+### Added
+
+- add tests for some overlooked edge cases
+
+### Fixed
+
+- remove extraneous regex modifiers ('`x`' and '`n`') ([#2][gh-00002])
+
 ## [1.2.0] - 2022-03-23
 
 ### Changed
@@ -97,6 +111,7 @@ _Initial release candidate._
 
 [//]: # (RELEASES)
 
+[1.2.1]: https://github.com/NorthboundTrain/jqg/tree/v1.2.1
 [1.2.0]: https://github.com/NorthboundTrain/jqg/tree/v1.2.0
 [1.1.3]: https://github.com/NorthboundTrain/jqg/tree/v1.1.3
 [1.1.2]: https://github.com/NorthboundTrain/jqg/tree/v1.1.2
@@ -108,3 +123,4 @@ _Initial release candidate._
 [//]: # (ISSUES)
 
 [gh-00001]: https://github.com/NorthboundTrain/jqg/issues/1
+[gh-00002]: https://github.com/NorthboundTrain/jqg/issues/2

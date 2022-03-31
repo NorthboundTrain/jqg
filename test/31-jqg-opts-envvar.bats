@@ -67,7 +67,8 @@ EOF
       "sub-categories": [
         "sweet orange",
         "bitter orange"
-      ]
+      ],
+      "is sweet": true
     },
     "grapefruit": {
       "ancestors": [
@@ -77,7 +78,8 @@ EOF
       "sub-categories": [
         "common grapefruit",
         "mandelo"
-      ]
+      ],
+      "is sweet": false
     },
     "lemon": {
       "ancestors": [

@@ -19,7 +19,7 @@ setup() {
 
 
 # pipeline in
-@test "[51] pipeline in" {
+@test "[52] pipeline in" {
     run  bash -c "jq . $CARNIVORA_JSON | jqg feli"
     assert_success
     assert_output - <<EOF
@@ -32,7 +32,7 @@ EOF
 }
 
 # pipeline in
-@test "[51] pipeline out" {
+@test "[52] pipeline out" {
     run  bash -c "jqg feli $CARNIVORA_JSON | jq -S -c"
     assert_success
     assert_output - <<EOF
@@ -41,7 +41,7 @@ EOF
 }
 
 # pipeline in
-@test "[51] pipeline middle" {
+@test "[52] pipeline middle" {
     run  bash -c "jq . $CARNIVORA_JSON | jqg feli | jq -S -c"
     assert_success
     assert_output - <<EOF

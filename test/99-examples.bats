@@ -457,6 +457,28 @@ EOF
 }
 
 
+# search keys, ouput values
+@test "[99] search keys, output values" {
+    run jqg -k king -V $CARNIVORA_JSON
+    assert_success
+    assert_output - <<EOF
+[
+  "animalia"
+]
+EOF
+}
+
+# search values, ouput keys
+@test "[99] search values, output keys" {
+    run jqg -v king -K $CARNIVORA_JSON
+    assert_success
+    assert_output - <<EOF
+[
+  "cat.feral.0.aka"
+]
+EOF
+}
+
 #==================================================================
 ## Regex / PCRE Examples
 

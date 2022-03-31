@@ -593,6 +593,32 @@ $ jqg -q -S . odd-values.json
 
 </details>
 
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>search keys, output values</summary>
+
+```bash
+$ jqg -k king -V carnivora.json
+[
+  "animalia"
+]
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>search values, output keys</summary>
+
+```bash
+$ jqg -v king -K carnivora.json
+[
+  "cat.feral.0.aka"
+]
+```
+
+</details>
+
 [//]: # (==================================================================)
 
 ## Regex / PCRE Examples

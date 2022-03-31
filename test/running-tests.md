@@ -4,7 +4,7 @@
 
 JQG includes a suite of unit tests to help ensure that future code
 changes do not break current capabilities. As of this writing, there are
-220+ tests that run in around 50 seconds on my development machine -- not the largest
+240+ tests that run in around 65 seconds on my development machine -- not the largest
 or fastest test suite out there, by a long shot, but it meets the project's needs.
 
 ## Installing `bats`
