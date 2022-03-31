@@ -1,4 +1,4 @@
-# this file is the source for the doc/jqg-examples.md file
+# this file is the source for the docs/jqg-examples.md file
 
 
 setup() {

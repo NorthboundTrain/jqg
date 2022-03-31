@@ -157,7 +157,7 @@ $ jqg 'int|false' odd-values.json | jqg -u
 }
 ```
 
-Many more examples are provided in [jqg-examples.md](doc/jqg-examples.md).
+Many more examples are provided in [jqg-examples.md](docs/jqg-examples.md).
 
 ## Table of Contents
 
@@ -177,7 +177,7 @@ Many more examples are provided in [jqg-examples.md](doc/jqg-examples.md).
 
 ### Prerequisites
 
-The JQG script is self-contained except for the need to have both `jq` and `bash` on the system somewhere; `bash` itself needs to be on your `$PATH`, but `jq` does not -- see the [documentation](doc/jqg.md) for more details.
+The JQG script is self-contained except for the need to have both `jq` and `bash` on the system somewhere; `bash` itself needs to be on your `$PATH`, but `jq` does not -- see the [documentation](docs/jqg.md) for more details.
 
 ### Download the Script
 
@@ -234,9 +234,9 @@ curl -s 'https://api.github.com/repos/NorthboundTrain/jqg' | jqg 'name|count'
 
 ## Documentation & Examples
 
-- [jqg.md](doc/jqg.md) - the JQG man page
-- [jqg-examples.md](doc/jqg-examples.md) - an exhaustive look at the different invocation methods as well as each command line option
-- [jqg-filters.md](doc/jqg-filters.md) - the fully annotated JQG filter
+- [jqg.md](docs/jqg.md) - the JQG man page
+- [jqg-examples.md](docs/jqg-examples.md) - an exhaustive look at the different invocation methods as well as each command line option
+- [jqg-filters.md](docs/jqg-filters.md) - the fully annotated JQG filter
 
 ## Version History
 

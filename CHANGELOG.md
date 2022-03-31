@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - remove extraneous regex modifiers ('`x`' and '`n`') ([#2][gh-00002])
+- fix documentation links in [`README.md`](README.md) ([#3][gh-00003])
 
 ## [1.2.0] - 2022-03-23
 
@@ -124,3 +125,4 @@ _Initial release candidate._
 
 [gh-00001]: https://github.com/NorthboundTrain/jqg/issues/1
 [gh-00002]: https://github.com/NorthboundTrain/jqg/issues/2
+[gh-00003]: https://github.com/NorthboundTrain/jqg/issues/3

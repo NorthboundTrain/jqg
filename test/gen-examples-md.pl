@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 #***************************************************************************
-#*** gen-examples-md.pl - generate doc/jqg-examples.md file from test/99-examples.bats
+#*** gen-examples-md.pl - generate docs/jqg-examples.md file from test/99-examples.bats
 #*** Copyright 2021 Joseph Casadonte
 #***************************************************************************
 #*** Licensed under the Apache License, Version 2.0 (the "License");
