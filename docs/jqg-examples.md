@@ -369,7 +369,7 @@ $ jqg -j + feral carnivora.json
 <summary>pipe output into JQG from curl</summary>
 
 ```bash
-$ curl -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/test/odd-values.json | jqg -v '(?<!\d)0|\[\]'
+$ curl -m 4 -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/test/odd-values.json | jqg -v '(?<!\d)0|\[\]'
 {
   "two.0.two-a.number-zero": 0,
   "three.empty-array": []

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - add tests for some overlooked edge cases
+- add timeout to curl test & skip test if tripped ([#5][gh-00005])
 
 ### Fixed
 
@@ -127,3 +128,4 @@ _Initial release candidate._
 [gh-00002]: https://github.com/NorthboundTrain/jqg/issues/2
 [gh-00003]: https://github.com/NorthboundTrain/jqg/issues/3
 [gh-00004]: https://github.com/NorthboundTrain/jqg/issues/4
+[gh-00005]: https://github.com/NorthboundTrain/jqg/issues/5

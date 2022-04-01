@@ -105,7 +105,7 @@ my($in) = IO::File->new("<$BATS_FILE");
 die qq([ERROR] Cannot open "$BATS_FILE" for input - $!\n) unless $in;
 
 #***** loop through BATS file looking for examples *****
-my($TEST_ELEMENT_OR_HEADER, $ASSERT_OUTPUT_EOF) = (1 .. 999);
+my($TEST_ELEMENT_OR_HEADER, $ASSERT_OUTPUT_EOF, $IGNORE_END) = (1 .. 999);
 
 my($test) = undef;
 my($looking_for) = $TEST_ELEMENT_OR_HEADER;
@@ -175,6 +175,16 @@ EOS
         }
     }
 
+    # #&&& IGNORE START
+    elsif (($looking_for == $TEST_ELEMENT_OR_HEADER) && (m{^\s*#&&& IGNORE START})) {
+        $looking_for = $IGNORE_END;
+    }
+
+    # #&&& IGNORE END
+    elsif (($looking_for == $IGNORE_END) && (m{^\s*#&&& IGNORE END})) {
+        $looking_for = $TEST_ELEMENT_OR_HEADER;
+    }
+
     # ## Search Criteria Examples
     elsif (($looking_for == $TEST_ELEMENT_OR_HEADER) && (m{^\s*##\s+(.*)$})) {
         my($header) = $1;
@@ -196,7 +206,7 @@ EOS
            ((m{^\s*(#)\s*(.*?)\s*$}) ||                 # # some comment
             (m{^\s*(skip)\s+"([^"]+)\"}) ||             # skip "due to a bug ..."
             (m{^\s*(export)\s+(.*)\s*$}) ||             # export JQG_OPTS="-q -S"
-            (m{^\s*(run)\s+bash\s+-c\s+"(.*)"\s*$}) ||  # run  bash -c "jq . $CARNIVORA_JSON | jqg feli | jq -S -c"
+            (m{^\s*(run)\s+bash\s+-c.*?\s+"(.*)"\s*$}) ||  # run  bash -c "jq . $CARNIVORA_JSON | jqg feli | jq -S -c"
             (m{^\s*(run)\s+(jqg\s+.*)\s*$}))) {         # run  jqg -v 'f|(?-i:M)' $CARNIVORA_JSON
         my($element_type) = $1;
         my($element_value) = $2;

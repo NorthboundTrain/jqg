@@ -241,7 +241,14 @@ EOF
 
 # pipe output into JQG from curl
 @test "[99] pipe output into JQG from curl" {
-    run  bash -c "curl -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/test/odd-values.json | jqg -v '(?<!\d)0|\[\]'"
+    run  bash -c -o pipefail "curl -m 4 -s https://raw.githubusercontent.com/NorthboundTrain/jqg/main/test/odd-values.json | jqg -v '(?<!\d)0|\[\]'"
+
+    #&&& IGNORE START
+    if [[ $status -eq 28 ]]; then
+        skip "curl connection timeout (behind proxy?)"
+    fi
+    #&&& IGNORE END
+
     assert_success
     assert_output - <<EOF
 {
