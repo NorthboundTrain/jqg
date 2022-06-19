@@ -1,7 +1,7 @@
 # `jqg` - search flattened JSON using `jq`; alternately, unflatten structured JSON
 
 [![BATS](https://github.com/NorthboundTrain/jqg/actions/workflows/bats.yml/badge.svg)](https://github.com/NorthboundTrain/jqg/actions/workflows/bats.yml)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://github.com/NorthboundTrain/jqg/LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://raw.githubusercontent.com/NorthboundTrain/jqg/main/LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/NorthboundTrain/jqg?sort=semver)](https://github.com/NorthboundTrain/jqg/releases/latest)
 [![Semantic Versioning](https://img.shields.io/badge/semantic_versioning-grey)](https://semver.org/)
 [![Common Changelog](https://common-changelog.org/badge.svg)](https://common-changelog.org)
@@ -185,7 +185,7 @@ It's easy to get the latest stable version of the script. First decide where you
 
 ```none
 cd /path/to/script/dir
-wget https://github.com/NorthboundTrain/jqg/releases/latest/download/src/jqg
+wget https://github.com/NorthboundTrain/jqg/raw/main/src/jqg
 chmod +x jqg
 ```
 
@@ -200,13 +200,13 @@ git clone https://github.com/NorthboundTrain/jqg.git
 
 # SSH
 cd /path/to/git/parent/dir
-git clone git@github.com/NorthboundTrain/jqg.git
+git clone git@github.com:NorthboundTrain/jqg.git
 ```
 
 If you want to run the unit tests, you will also need the [BATS](https://github.com/bats-core) sub-modules; you can clone them at the same time by adding in the `--recurse-submodules` option for `git clone`:
 
 ```none
-git clone --recurse-submodules https://github.com:NorthboundTrain/jqg.git
+git clone --recurse-submodules https://github.com/NorthboundTrain/jqg.git
 git clone --recurse-submodules git@github.com:NorthboundTrain/jqg.git
 ```
 

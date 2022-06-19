@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format used here is based upon [Common Changelog](https://common-changelog.org/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) guidelines.
 
+## [1.2.2] - 2022-06-19
+
+### Fixed
+
+- fixed broken links in documentation ([#6][gh-00006])
+
 ## [1.2.1] - 2022-03-31
 
 ### Changed
@@ -113,6 +119,7 @@ _Initial release candidate._
 
 [//]: # (RELEASES)
 
+[1.2.2]: https://github.com/NorthboundTrain/jqg/tree/v1.2.2
 [1.2.1]: https://github.com/NorthboundTrain/jqg/tree/v1.2.1
 [1.2.0]: https://github.com/NorthboundTrain/jqg/tree/v1.2.0
 [1.1.3]: https://github.com/NorthboundTrain/jqg/tree/v1.1.3
@@ -129,3 +136,4 @@ _Initial release candidate._
 [gh-00003]: https://github.com/NorthboundTrain/jqg/issues/3
 [gh-00004]: https://github.com/NorthboundTrain/jqg/issues/4
 [gh-00005]: https://github.com/NorthboundTrain/jqg/issues/5
+[gh-00006]: https://github.com/NorthboundTrain/jqg/issues/6

@@ -29,7 +29,7 @@ main() {
     eval set -- "$_getopt"
 
     #***** release version *****
-    jqg_version="v1.2.1"
+    jqg_version="v1.2.2"
 
     #***** determine JQ binary *****
     jq_bin=${JQ_BIN:-jq}

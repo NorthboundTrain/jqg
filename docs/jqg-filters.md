@@ -536,7 +536,7 @@ This array is sent through `map()`, which simply iterates over each element of t
 
 See the previous section for how `setpath` will use this array.
 
-[slash ('`/`')](https://stedolan.github.io/jq/manual/#Multiplication,division,modulo:*,/,and%),
+[slash ('`/`')](https://stedolan.github.io/jq/manual/#Multiplication,division,modulo:*,%2f,and%25),
 [map](https://stedolan.github.io/jq/manual/#map(x),map_values(x)),
 [tonumber](https://stedolan.github.io/jq/manual/#tonumber),
 [Error Suppression/Optional Operator ('`?`')](https://stedolan.github.io/jq/manual/#ErrorSuppression/OptionalOperator:?),
