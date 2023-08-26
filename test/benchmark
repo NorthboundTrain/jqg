@@ -1,0 +1,369 @@
+#!/usr/bin/env bash
+
+script_dir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
+
+#----- default values and options -----
+warmup=5
+loops=25
+tmpdir=/tmp
+seed=$(date +%s)
+alltags=false
+skiptags=false
+grip=false
+pandoc=true
+all_tests=true
+search_test=false
+unflatten_test=false
+extract_test=false
+
+declare -a commits=()
+
+#***** parse options *****
+# https://stackoverflow.com/a/7948533/45978
+_getopt=$(getopt --options n:w:c:t:s:axASUXgPh --long loops:,warmup:,commits:tmpdir:,seed:,alltags,notags,alltest,search,unflatten,extract,grip,nopandoc,help --alternative --name 'benchmark' -- "$@")
+ec=$?
+if [ $ec != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+eval set -- "$_getopt"
+
+while true; do
+    case "$1" in
+        -n | --loops )   loops="$2";      shift 2;;
+        -w | --warmup )  warmup="$2";     shift 2;;
+        -c | --commits ) commits+=("$2"); shift 2;;
+        -t | --tmpdir )  tmpdir="$2";     shift 2;;
+        -s | --seed )    seed="$2";       shift 2;;
+        -a | --alltags ) alltags=true;    shift;;
+        -x | --notags )  skiptags=true;   shift;;
+
+        -A | --alltest )   all_tests=true;  search_test=false; unflatten_test=false; extract_test=false; shift;;
+        -S | --search )    all_tests=false; search_test=true;                                            shift;;
+        -U | --unflatten ) all_tests=false;                    unflatten_test=true;                      shift;;
+        -X | --extract )   all_tests=false;                                          extract_test=true;  shift;;
+
+        -g | --grip )     grip=true;       shift;;
+        -P | --nopandoc ) pandoc=false;    shift;;
+
+        -h | --help ) echo; echo "usage: benchmark [-s <seed>] [-c <commit> ...] [-g -P] [-A|-S -U -X] [-n <num loops>] [-w <warmup>] [-a|-x] [-t <temp dir>]"; exit 1 ;;
+
+        -- ) shift; break ;;
+        * ) break ;;
+    esac
+done
+
+#***** init working directory *****
+tmpdir="$tmpdir/jqg-bench"
+rm -rf "$tmpdir"
+
+mkdir -p "$tmpdir"
+
+#***************************************************************************
+main()
+{
+    RANDOM=$seed
+    echo "SEED: $seed"
+
+    #***** determine tests to run *****
+    if [[ "$all_tests" == "true" ]]; then
+        search_test=true
+        unflatten_test=true
+        extract_test=true
+    fi
+
+    #***** make sure we can run correctly *****
+    check_git
+    check_dependencies
+
+    #***** find work *****
+    top_git_dir=$(git rev-parse --show-toplevel)
+    top_git_dir=$(realpath "$top_git_dir")
+
+    declare -a tags
+    discover_git_tags
+#for tag in "${tags[@]}"; do echo "TAG: $tag"; done; exit
+
+    #***** grab path to JQG relative to the top of the git repo (for git show) *****
+    jqg_path=$(realpath "$script_dir/../src/jqg")
+    jqg_path="${jqg_path#"$top_git_dir/"}"
+
+    #***** setup the JSON input files *****
+    declare -a json
+
+    json[1]="$script_dir/large-structure1.json"
+    json[2]="$script_dir/large-structure2.json"
+    json[3]="$script_dir/large-structure3.json"
+    json[4]="$script_dir/large-structure4.json"
+
+    #***** grab each tagged JQG binary *****
+    declare -a all_labels=("${tags[@]}" "${commits[@]}")
+#for label in "${all_labels[@]}"; do echo "LABEL: $label"; done; exit
+    declare -A suffix_lookup
+
+    for label in "${all_labels[@]}"; do
+        local suffix=${label#v}
+        suffix=${suffix//./}
+
+        suffix_lookup[$label]="$suffix"
+        filename="$tmpdir/jqg-$suffix"
+
+        git show "$label:$jqg_path" >"$filename"
+        chmod 755 "$filename"
+    done
+
+    local jqg_latest="$script_dir/../src/jqg"
+
+    #***** search tests *****
+    if [[ "$search_test" == "true" ]]; then
+        local ec search_term_num search_term
+        for i in 1 2 3 4; do
+            #----- make sure we're looking for a term that will be found -----
+            ec=1
+            while [[ $ec -ne 0 ]]; do
+                search_term_num=$((RANDOM % "${lorem_cnt}"))
+                search_term=${lorem[$search_term_num]}
+
+                grep "$search_term" "${json[$i]}" >/dev/null 2>&1
+                ec=$?
+            done
+
+            echo
+            echo "benchmark search for \"$search_term\" in ${json[$i]}"
+            echo
+
+            declare -a testnames=()
+            declare -a cmdlines=()
+
+            for label in "${all_labels[@]}"; do
+                #----- build up -n args -----
+                testnames+=("-n $label")
+
+                #----- build up "jqg command lines" -----
+                local suffix=${suffix_lookup[$label]}
+                cmdlines+=("$tmpdir/jqg-$suffix $search_term ${json[$i]}")
+            done
+
+            testnames+=("-n latest")
+            cmdlines+=("$jqg_latest $search_term ${json[$i]}")
+
+            hyperfine -w "$warmup" -r "$loops" --export-markdown "$tmpdir/search-ls${i}-rpt.md" --show-output "${testnames[@]}" "${cmdlines[@]}" >/dev/null
+        done
+    fi
+
+    #***** unflattening tests *****
+    if [[ "$unflatten_test" == "true" ]]; then
+        for i in 1 2 3 4; do
+            local flat_json="$tmpdir/flat${i}.json"
+
+            $jqg_latest "${json[$i]}" >"$flat_json"
+
+            echo
+            echo "benchmark unflatten $flat_json"
+            echo
+
+            declare -a testnames=()
+            declare -a cmdlines=()
+
+            for label in "${all_labels[@]}"; do
+                #----- skip versions before 1.2.0 -----
+                if [[ "$label" =~ ^v ]] && [[ "$label" =~ v1.[01] ]]; then
+                    continue
+                fi
+
+                #----- build up -n args -----
+                testnames+=("-n $label")
+
+                #----- build up "jqg command lines" -----
+                local suffix=${suffix_lookup[$label]}
+                cmdlines+=("$tmpdir/jqg-$suffix -u $flat_json")
+            done
+
+            testnames+=("-n latest")
+            cmdlines+=("$jqg_latest -u $flat_json")
+
+            hyperfine -w "$warmup" -r "$loops" --export-markdown "$tmpdir/unflatten-ls${i}-rpt.md" --show-output "${testnames[@]}" "${cmdlines[@]}" >/dev/null
+        done
+    fi
+
+    #***** extract tests *****
+    if [[ "$extract_test" == "true" ]]; then
+        for i in 1 2 3 4; do
+            # the JQ filter finds all paths < 5 segments & formats as a selector
+            IFS=$'\n' read -r -d '' -a all_selectors < <( jq --compact-output --raw-output 'path(.. | select((iterables|tostring))) | select(length > 0 and length < 7)|reduce .[] as $element (""; . += (if $element|type == "number" then "[\($element|tostring)]" else ".\($element)" end))' "${json[$i]}" && printf '\0' )
+            local selector_count=${#all_selectors[@]}
+            local selector_num=$((RANDOM % "${selector_count}"))
+            local selector=${all_selectors[$selector_num]}
+
+            if [[ ! "$selector" =~ ^\. ]]; then
+                selector=".$selector"
+            fi
+
+            echo
+            echo "benchmark extract of \"$selector\" in ${json[$i]}"
+            echo
+
+            declare -a testnames=()
+            declare -a cmdlines=()
+
+            for label in "${all_labels[@]}"; do
+                #----- skip versions before 1.3.0 -----
+                if [[ "$label" =~ ^v ]] && [[ "$label" =~ v1.[012] ]]; then
+                    continue
+                fi
+
+                #----- build up -n args -----
+                testnames+=("-n $label")
+
+                #----- build up "jqg command lines" -----
+                local suffix=${suffix_lookup[$label]}
+                cmdlines+=("$tmpdir/jqg-$suffix -x '$selector' ${json[$i]}")
+            done
+
+            testnames+=("-n latest")
+            cmdlines+=("$jqg_latest -x '$selector' ${json[$i]}")
+
+            hyperfine -w "$warmup" -r "$loops" --export-markdown "$tmpdir/extract-ls${i}-rpt.md" --show-output "${testnames[@]}" "${cmdlines[@]}" >/dev/null
+        done
+    fi
+
+    #***** format reports for plain text *****
+    all_reports="$tmpdir/reports.md"
+    echo "# Reports" >"$all_reports"
+
+    if [[ "$search_test" == "true" ]]; then
+        echo "## Search Tests" >>"$all_reports"
+        for i in 1 2 3 4; do
+            if [[ "$pandoc" == "true" ]]; then
+                echo
+                echo "============================"
+                echo "search large-structure${i}.json"
+                echo "============================"
+                echo
+                pandoc -t plain "$tmpdir/search-ls${i}-rpt.md"
+                echo
+            fi
+
+            echo "### Search LS${i} Tests" >>"$all_reports"
+            cat "$tmpdir/search-ls${i}-rpt.md" >>"$all_reports"
+        done
+    fi
+
+    if [[ "$unflatten_test" == "true" ]]; then
+        echo "## Unflatten Tests" >>"$all_reports"
+        for i in 1 2 3 4; do
+            if [[ "$pandoc" == "true" ]]; then
+                echo
+                echo "==============================="
+                echo "unflatten large-structure${i}.json"
+                echo "==============================="
+                echo
+                pandoc -t plain "$tmpdir/unflatten-ls${i}-rpt.md"
+                echo
+            fi
+
+            echo "### Unflatten LS${i} Tests" >>"$all_reports"
+            cat "$tmpdir/unflatten-ls${i}-rpt.md" >>"$all_reports"
+        done
+    fi
+
+    if [[ "$extract_test" == "true" ]]; then
+        echo "## Extract Tests" >>"$all_reports"
+        for i in 1 2 3 4; do
+            if [[ "$pandoc" == "true" ]]; then
+                echo
+                echo "==============================="
+                echo "extract large-structure${i}.json"
+                echo "==============================="
+                echo
+                pandoc -t plain "$tmpdir/extract-ls${i}-rpt.md"
+                echo
+            fi
+
+            echo "### Extract LS${i} Tests" >>"$all_reports"
+            cat "$tmpdir/extract-ls${i}-rpt.md" >>"$all_reports"
+        done
+    fi
+
+    if [[ "$grip" == "true" ]]; then
+        grip -b "$all_reports" localhost:6420
+    fi
+}
+
+#***************************************************************************
+check_git()
+{
+    #***** get the current branch (and ABEND if not in a git dir) *****
+    current_branch=$(git branch --show-current)
+    local rc=$?
+    if [[ $rc -ne 0 ]] || [[ -z "$current_branch" ]]; then
+        exit
+    fi
+}
+
+#***************************************************************************
+check_dependencies()
+{
+    which hyperfine >/dev/null 2>&1
+    local rc=$?
+
+    if [[ $rc -ne 0 ]]; then
+        echo
+        echo "[ERROR] hyperfine not found on \$PATH - abending"
+        echo
+
+        exit
+    fi
+
+    which pandoc >/dev/null 2>&1
+    local rc=$?
+
+    if [[ $rc -ne 0 ]]; then
+        echo
+        echo "[ERROR] pandoc not found on \$PATH - abending"
+        echo
+
+        exit
+    fi
+}
+
+#***************************************************************************
+discover_git_tags()
+{
+    if [[ "$skiptags" == "true" ]]; then
+        return
+    fi
+
+    #----- skip some versions because they were doc-only changes -----
+    declare -A skip_versions=( [v1.1.1]=true [v1.1.2]=true [v1.2.1]=true [v1.2.2]=true)
+    if [[ "$alltags" == "true" ]]; then
+        skip_versions=()
+    fi
+
+    while IFS= read -r line
+    do
+        local tag_value=${line%% }
+
+        #----- we only want version tags that are not release candidates -----
+        if [[ ! "$tag_value" =~ ^v ]] || [[ "$tag_value" =~ -rc ]]; then
+            continue
+        fi
+
+        if [[ ${skip_versions[$tag_value]+exists} ]]; then
+            continue
+        fi
+
+        tags+=("$tag_value")
+    done < <(git tag --format="%(refname:strip=2)")
+}
+
+#***************************************************************************
+
+#***** lorem is down here because it's so long... *****
+declare -a lorem
+lorem=(abhorreant accommodare accumsan accusam accusamus accusata adhuc adipisci adipiscing admodum adolescens adversarium aenean aeque aeterno affert agam albucius alia alii aliqua aliquam aliquando aliquet aliquip altera alterum amet animal ante antiopam aperiam aperiri appareat appellantur aptent arcu argumentum assentior assueverit assum atomorum atqui auctor audiam audire augue autem bibendum blandit bonorum brute causae cetero ceteros choro cibo class clita commodo commune complectitur comprehensam conceptam concludaturque conclusionemque condimentum congue consectetuer consectetur consequat consequuntur consetetur constituam constituto consul consulatu contentiones conubia convallis convenire copiosae corpora cotidieque cras cubilia cum curabitur curae cursus dapibus debet debitis decore definiebas definitionem definitiones delectus delenit deleniti democritum denique deseruisse deserunt detracto diam dicam dicant dicat dicit dico dicta dictas dictum dictumst dignissim dis discere disputando disputationi dissentias dissentiet dissentiunt docendi doctus dolor dolore dolorem dolores dolorum doming donec dui duis duo eam efficiantur efficiendi efficitur egestas eget eiusmod elaboraret electram eleifend elementum eligendi elit elitr eloquentiam enim eos epicurei epicuri equidem erant erat eripuit eros errem error erroribus eruditi esse essent est etiam euismod eum euripidis everti evertitur expetenda expetendis explicari fabellas fabulas facer facete facilis facilisi facilisis falli fames fastidii faucibus felis fermentum ferri feugait feugiat finibus fringilla fugit fuisset fusce graece graecis graeco gravida gubergren habemus habeo habitant habitasse hac harum has hendrerit himenaeos his homero honestatis iaculis idque iisque illud illum impedit imperdiet inani inceptos inciderint incididunt incorrupte indoctum inermis insolens instructior integer integre intellegam intellegebat interdum interpretaris invenire invidunt ipsum iracundia iriure iudicabit iudico ius iusto iuvaret justo labitur labore labores lacinia lacus laoreet latine laudem lectus legendos legere legimus leo liber liberavisse libero libris ligula litora lobortis lorem lucilius luctus ludus luptatum maecenas magna magnis maiestatis maiorum malesuada malis malorum maluisset mandamus massa mattis mauris maximus mazim mea mediocrem mei meis mel meliore melius menandri mentitum metus minim mnesarchum moderatius modo modus molestiae molestie mollis montes morbi movet mundi munere mus mutat nam nascetur natoque natum nec necessitatibus neglegentur nemore neque netus nibh nihil nisi nisl nobis noluisse nominati nominavi non nonumes noster nostra nostro nostrud nostrum novum nulla nullam numquam nunc nusquam oblique ocurreret odio offendit omittantur omnes omnesque omnis omnium oportere option oratio orci ornare ornatus partem partiendo parturient paulo pede pellentesque penatibus per pericula periculis persecuti persequeris persius pertinacia pertinax petentium phaedrum pharetra phasellus philosophia placerat platea platonem populo porro porta porttitor posidonium posse possim possit postea postulant posuere potenti praesent pretium pri prima primis principes pro probatus probo prodesset proin prompta propriae pulvinar purus putant putent quaeque quaerendum quaestio qualisque quam quando quas quem qui quidam quis quisque quo quod quodsi quot rationibus rebum recteque recusabo referrentur regione reprehendunt reprimique repudiandae repudiare reque rhoncus ridens ridiculus risus rutrum sadipscing saepe sagittis sale salutandi salutatus sanctus sapien sapientem scelerisque scribentur scripta scriptorem sea sed sem semper senectus senserit sensibus sententiae signiferumque similique simul singulis sint sit sitlorem sociis sociosqu sodales soleat solet sollicitudin solum soluta sonet splendide stet suas suavitate summo sumo suscipit suspendisse tacimates taciti tale tamquam tantas tellus tempor temporibus tempus theophrastus tibique timeam tincidunt tollit torquatos torquent tortor tota tristique tritani turpis ubique ullamcorper ultrices ultricies unum urbanitas urna usu utamur utinam varius vehicula vel velit venenatis verear veri veritus vero verterem vestibulum vide vidit vim viris virtute vis vitae vituperata vituperatoribus vivamus vivendum viverra vix vocent vocibus volumus voluptaria voluptatibus voluptatum voluptua volutpat vulputate wisi)
+lorem_cnt=${#lorem[@]}
+
+#***** call into main function *****
+main
+
+#***************************************************************************
+#*****  EOF  *****  EOF  *****  EOF  *****  EOF  *****  EOF  ***************

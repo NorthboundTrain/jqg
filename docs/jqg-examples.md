@@ -1,17 +1,17 @@
 # `jqg` Examples
 
-## Sample JSON for Examples
-
-These are the JSON files used in the unit test scripts. As such, the data in them is pretty nonsensical and even (perhaps) factually inaccurate; its primary purpose is to test various program conditions.
+There are three modes that can be invoked: search, unflatten, and extract. Most of the examples are for the search mode, though many of them can also be applied in pieces to the other two modes. There are also two composite modes each with their own script, search with unflattened results (`jqu`) and extract then search (`jqx`); both have examples shown below.
 
 [//]: # (------------------------------------------------------------------)
 [//]: # (--- NOTE: this file is generated using the gen-examples-md.pl   --)
 [//]: # (--- script and should not be edited directly                    --)
 [//]: # (------------------------------------------------------------------)
 
+*-- sample JSON - used for examples below --*
+
 [//]: # (==================================================================)
 <details>
-    <summary>carnivora.json</summary>
+<summary>carnivora.json</summary>
 
 ```json
 {
@@ -86,7 +86,9 @@ These are the JSON files used in the unit test scripts. As such, the data in the
     "key(with)parens": true,
     "bare-parens()": true,
     "left(paren-only": true,
-    "unmatched-left)-paren": false
+    "unmatched-left)-paren": false,
+    "dollar $ign": "both-sides-$now",
+    "period-in-value": "hello.world"
   },
   "two": [
     {
@@ -116,8 +118,20 @@ These are the JSON files used in the unit test scripts. As such, the data in the
     "first",
     null,
     {},
-    "fourth"
+    999,
+    "fourth",
+    "hello.world"
   ],
+  "five": {
+    " leading space": "key",
+    "trailing space ": "key",
+    "  multi surround spaces   ": "key",
+    "   ": "only spaces - key",
+    "leading space": " value",
+    "trailing space": "value ",
+    "multi surround spaces": "   value  ",
+    "only spaces - value": "  "
+  },
   "end-string": "bar"
 }
 ```
@@ -474,7 +488,7 @@ $ jqg -q -S -q -c -Q mammal carnivora.json
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>set default JQG options (e.g. always sort output)</summary>
+<summary>set default JQG options - always sort output</summary>
 
 ```bash
 $ export JQG_OPTS="-q -S"
@@ -489,7 +503,7 @@ $ jqg mammal carnivora.json
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>override default JQG options (e.g. unsorted output)</summary>
+<summary>override default JQG options - show unsorted output</summary>
 
 ```bash
 $ export JQG_OPTS="-q -S"
@@ -504,7 +518,7 @@ $ jqg -Q mammal carnivora.json
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>set default JQG options (e.g. join keys with '+')</summary>
+<summary>set default JQG options - join keys with '+'</summary>
 
 ```bash
 $ export JQG_OPTS="-j +"
@@ -523,7 +537,7 @@ $ jqg feral carnivora.json
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>override default JQG options (e.g. join keys with ':')</summary>
+<summary>override default JQG options - join keys with ':'</summary>
 
 ```bash
 $ export JQG_OPTS="-j +"
@@ -557,6 +571,8 @@ $ jqg . odd-values.json
   "one.bare-parens()": true,
   "one.left(paren-only": true,
   "one.unmatched-left)-paren": false,
+  "one.dollar \$ign": "both-sides-\$now",
+  "one.period-in-value": "hello.world",
   "two.0.two-a.non-integer-number": -101.75,
   "two.0.two-a.number-zero": 0,
   "two.0.true-boolean": true,
@@ -570,7 +586,17 @@ $ jqg . odd-values.json
   "four.0": "first",
   "four.1": null,
   "four.2": {},
-  "four.3": "fourth",
+  "four.3": 999,
+  "four.4": "fourth",
+  "four.5": "hello.world",
+  "five. leading space": "key",
+  "five.trailing space ": "key",
+  "five.  multi surround spaces   ": "key",
+  "five.   ": "only spaces - key",
+  "five.leading space": " value",
+  "five.trailing space": "value ",
+  "five.multi surround spaces": "   value  ",
+  "five.only spaces - value": "  ",
   "end-string": "bar"
 }
 ```
@@ -585,16 +611,28 @@ $ jqg . odd-values.json
 $ jqg -q -S . odd-values.json
 {
   "end-string": "bar",
+  "five.   ": "only spaces - key",
+  "five.  multi surround spaces   ": "key",
+  "five. leading space": "key",
+  "five.leading space": " value",
+  "five.multi surround spaces": "   value  ",
+  "five.only spaces - value": "  ",
+  "five.trailing space": "value ",
+  "five.trailing space ": "key",
   "four.0": "first",
   "four.1": null,
   "four.2": {},
-  "four.3": "fourth",
+  "four.3": 999,
+  "four.4": "fourth",
+  "four.5": "hello.world",
   "one.bare-parens()": true,
+  "one.dollar \$ign": "both-sides-\$now",
   "one.integer-number": 101,
   "one.key(with)parens": true,
   "one.key|with|pipe": true,
   "one.left(paren-only": true,
   "one.null-value": null,
+  "one.period-in-value": "hello.world",
   "one.start-string": "foo",
   "one.string-with-parens": "(this and that)",
   "one.string-with-pipe": "this|that",
@@ -640,6 +678,51 @@ $ jqg -v king -K carnivora.json
 
 </details>
 
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>show JQG's JQ filter</summary>
+
+```bash
+$ jqg --debug breed test/carnivora.json
+CMDLINE: "jq"   "<FILTER>" < "test/carnivora.json"
+
+FILTER:
+def empty_leafs:
+    select(tostring | . == "{}" or . == "[]");
+
+def flatten_json:
+    . as \$data |
+    [ path(.. | select((scalars|tostring), empty_leafs)) ] |
+    map({ (map(tostring) | join(".")) : (. as \$path | . = \$data | getpath(\$path)) }) |
+    reduce .[] as \$item ({ }; . + \$item);
+
+def search_filter:
+    to_entries |
+    map(select(.[] | tostring | test("breed"; "i"))) |
+    from_entries;
+
+flatten_json | search_filter
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>count results</summary>
+
+```bash
+# a failed search without counting the results (default))
+$ jqg hippo test/carnivora.json && echo success || echo fail
+{}
+success
+
+# a failed search counting the results (-N)
+$ jqg -N hippo test/carnivora.json && echo success || echo fail
+fail
+```
+
+</details>
+
 [//]: # (==================================================================)
 
 ## Regex / PCRE Examples
@@ -656,7 +739,8 @@ $ jqg -v '\d+' odd-values.json
   "two.0.two-a.number-zero": 0,
   "two.1.two-c.alpha-num-1": "a1",
   "two.1.two-c.alpha-num-2": "2b",
-  "two.1.two-c.alpha-num-3": "a12b"
+  "two.1.two-c.alpha-num-3": "a12b",
+  "four.3": 999
 }
 ```
 
@@ -672,7 +756,8 @@ $ jqg -v '^-?\d+' odd-values.json
   "one.integer-number": 101,
   "two.0.two-a.non-integer-number": -101.75,
   "two.0.two-a.number-zero": 0,
-  "two.1.two-c.alpha-num-2": "2b"
+  "two.1.two-c.alpha-num-2": "2b",
+  "four.3": 999
 }
 ```
 
@@ -688,7 +773,8 @@ $ jqg -v '\d+$' odd-values.json
   "one.integer-number": 101,
   "two.0.two-a.non-integer-number": -101.75,
   "two.0.two-a.number-zero": 0,
-  "two.1.two-c.alpha-num-1": "a1"
+  "two.1.two-c.alpha-num-1": "a1",
+  "four.3": 999
 }
 ```
 
@@ -703,7 +789,8 @@ $ jqg -v '^[-.\d]+$' odd-values.json
 {
   "one.integer-number": 101,
   "two.0.two-a.non-integer-number": -101.75,
-  "two.0.two-a.number-zero": 0
+  "two.0.two-a.number-zero": 0,
+  "four.3": 999
 }
 ```
 
@@ -717,7 +804,8 @@ $ jqg -v '^[-.\d]+$' odd-values.json
 $ jqg -v '^\d+$' odd-values.json
 {
   "one.integer-number": 101,
-  "two.0.two-a.number-zero": 0
+  "two.0.two-a.number-zero": 0,
+  "four.3": 999
 }
 ```
 
@@ -774,7 +862,7 @@ $ jqg -v 'f|M' carnivora.json
 
 <p/>
 
-**Test Skipped - ** *due to a bug in JQ's Oniguruma library, this requires a post 1.6 JQ build*
+**Test Skipped:** *due to a bug in JQ's Oniguruma library, this requires a post 1.6 JQ build*
 
 ```bash
 $ jqg -v 'f|(?-i:M)' carnivora.json
@@ -897,8 +985,11 @@ $ jqg four odd-values.json
   "four.0": "first",
   "four.1": null,
   "four.2": {},
-  "four.3": "fourth"
+  "four.3": 999,
+  "four.4": "fourth",
+  "four.5": "hello.world"
 }
+
 # same output, unflattened
 $ jqg four odd-values.json | jqg -u
 {
@@ -906,7 +997,9 @@ $ jqg four odd-values.json | jqg -u
     "first",
     null,
     {},
-    "fourth"
+    999,
+    "fourth",
+    "hello.world"
   ]
 }
 ```
@@ -923,8 +1016,11 @@ $ jqg -E four odd-values.json
 {
   "four.0": "first",
   "four.1": null,
-  "four.3": "fourth"
+  "four.3": 999,
+  "four.4": "fourth",
+  "four.5": "hello.world"
 }
+
 # same output, unflattened
 $ jqg -E four odd-values.json | jqg -u
 {
@@ -932,7 +1028,9 @@ $ jqg -E four odd-values.json | jqg -u
     "first",
     null,
     null,
-    "fourth"
+    999,
+    "fourth",
+    "hello.world"
   ]
 }
 ```
@@ -955,6 +1053,7 @@ $ jqg -j ^ two odd-values.json
   "two^1^two-c^alpha-num-2": "2b",
   "two^1^two-c^alpha-num-3": "a12b"
 }
+
 # same output, unflattened
 $ jqg -j ^ two odd-values.json | jqg -u -j ^
 {
@@ -999,6 +1098,7 @@ $ jqg two odd-values.json
   "two+1+two-c+alpha-num-2": "2b",
   "two+1+two-c+alpha-num-3": "a12b"
 }
+
 # same output, unflattened
 $ export JQG_OPTS='-j +'
 $ jqg two odd-values.json | jqg -u
@@ -1026,3 +1126,549 @@ $ jqg two odd-values.json | jqg -u
 ```
 
 </details>
+
+[//]: # (==================================================================)
+
+## Extract Mode Examples
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>simple extraction</summary>
+
+```bash
+# .cat selector in JQ
+$ jq .cat carnivora.json
+{
+  "isa": "feline",
+  "feral": [
+    {
+      "species": "lion",
+      "aka": "king of the beasts"
+    },
+    {
+      "species": "Bengal tiger"
+    },
+    {
+      "species": "black-footed cat",
+      "aka": "felis nigripes"
+    }
+  ],
+  "domesticated": [
+    {
+      "petname": "Fluffy",
+      "breed": "Bengal",
+      "color": ""
+    },
+    {
+      "petname": "Misty",
+      "breed": "domestic short hair",
+      "color": "yellow"
+    }
+  ]
+}
+
+# same .cat selector, using JQG's extract mode
+$ jqg -x .cat carnivora.json
+{
+  "cat": {
+    "isa": "feline",
+    "feral": [
+      {
+        "species": "lion",
+        "aka": "king of the beasts"
+      },
+      {
+        "species": "Bengal tiger"
+      },
+      {
+        "species": "black-footed cat",
+        "aka": "felis nigripes"
+      }
+    ],
+    "domesticated": [
+      {
+        "petname": "Fluffy",
+        "breed": "Bengal",
+        "color": ""
+      },
+      {
+        "petname": "Misty",
+        "breed": "domestic short hair",
+        "color": "yellow"
+      }
+    ]
+  }
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>deeper extraction</summary>
+
+```bash
+$ jqg -x .cat.feral carnivora.json
+{
+  "cat": {
+    "feral": [
+      {
+        "species": "lion",
+        "aka": "king of the beasts"
+      },
+      {
+        "species": "Bengal tiger"
+      },
+      {
+        "species": "black-footed cat",
+        "aka": "felis nigripes"
+      }
+    ]
+  }
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>array selector (with sparse array)</summary>
+
+```bash
+$ jqg -x .cat.feral[1] carnivora.json
+{
+  "cat": {
+    "feral": [
+      null,
+      {
+        "species": "Bengal tiger"
+      }
+    ]
+  }
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>multiple selectors</summary>
+
+```bash
+$ jqg -x .one,.three odd-values.json
+{
+  "one": {
+    "start-string": "foo",
+    "null-value": null,
+    "integer-number": 101,
+    "string-with-pipe": "this|that",
+    "key|with|pipe": true,
+    "string-with-parens": "(this and that)",
+    "key(with)parens": true,
+    "bare-parens()": true,
+    "left(paren-only": true,
+    "unmatched-left)-paren": false,
+    "dollar \$ign": "both-sides-\$now",
+    "period-in-value": "hello.world"
+  },
+  "three": {
+    "empty-string": "",
+    "empty-object": {},
+    "empty-array": []
+  }
+}
+
+# the selector order can be reversed, changing the output
+$ jqg -x .three,.one odd-values.json
+{
+  "three": {
+    "empty-string": "",
+    "empty-object": {},
+    "empty-array": []
+  },
+  "one": {
+    "start-string": "foo",
+    "null-value": null,
+    "integer-number": 101,
+    "string-with-pipe": "this|that",
+    "key|with|pipe": true,
+    "string-with-parens": "(this and that)",
+    "key(with)parens": true,
+    "bare-parens()": true,
+    "left(paren-only": true,
+    "unmatched-left)-paren": false,
+    "dollar \$ign": "both-sides-\$now",
+    "period-in-value": "hello.world"
+  }
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>overlapping selectors</summary>
+
+```bash
+# the first selector contains the second
+$ jqg -x .cat,.cat.feral[1] carnivora.json
+{
+  "cat": {
+    "isa": "feline",
+    "feral": [
+      {
+        "species": "lion",
+        "aka": "king of the beasts"
+      },
+      {
+        "species": "Bengal tiger"
+      },
+      {
+        "species": "black-footed cat",
+        "aka": "felis nigripes"
+      }
+    ],
+    "domesticated": [
+      {
+        "petname": "Fluffy",
+        "breed": "Bengal",
+        "color": ""
+      },
+      {
+        "petname": "Misty",
+        "breed": "domestic short hair",
+        "color": "yellow"
+      }
+    ]
+  }
+}
+
+# when the second selector contains the first, the output order can be changed (though array order is not)
+$ jqg -x .cat.feral[1],.cat carnivora.json
+{
+  "cat": {
+    "feral": [
+      {
+        "species": "lion",
+        "aka": "king of the beasts"
+      },
+      {
+        "species": "Bengal tiger"
+      },
+      {
+        "species": "black-footed cat",
+        "aka": "felis nigripes"
+      }
+    ],
+    "isa": "feline",
+    "domesticated": [
+      {
+        "petname": "Fluffy",
+        "breed": "Bengal",
+        "color": ""
+      },
+      {
+        "petname": "Misty",
+        "breed": "domestic short hair",
+        "color": "yellow"
+      }
+    ]
+  }
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>extract from flattened input</summary>
+
+```bash
+$ jqg . carnivora.json | jqg -x .dog
+{
+  "dog": [
+    {
+      "petname": "Growler",
+      "breed": "mutt"
+    },
+    {
+      "petname": "Tiger",
+      "breed": "yellow labrador",
+      "feral": true,
+      "type": "domesticated"
+    },
+    {}
+  ]
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>nonexistent selector</summary>
+
+```bash
+$ jqg -x .dolphin carnivora.json
+null
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>invalid selector</summary>
+
+```bash
+$ jqg -x dog carnivora.json
+jq: error: dog/0 is not defined at <top-level>, line 7:
+    path(dog) as \$selector_path | tostream |
+jq: 1 compile error
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>mismatched selector</summary>
+
+```bash
+$ jqg -x .[0] carnivora.json
+jq: error (at <stdin>:53): Cannot index object with number
+```
+
+</details>
+
+[//]: # (==================================================================)
+
+## Composite Search Examples
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>search with unflattened results</summary>
+
+```bash
+# normal search
+$ jqg breed carnivora.json
+{
+  "cat.domesticated.0.breed": "Bengal",
+  "cat.domesticated.1.breed": "domestic short hair",
+  "dog.0.breed": "mutt",
+  "dog.1.breed": "yellow labrador"
+}
+
+# same search, with unflattened results (using -U)
+$ jqg -U breed carnivora.json
+{
+  "cat": {
+    "domesticated": [
+      {
+        "breed": "Bengal"
+      },
+      {
+        "breed": "domestic short hair"
+      }
+    ]
+  },
+  "dog": [
+    {
+      "breed": "mutt"
+    },
+    {
+      "breed": "yellow labrador"
+    }
+  ]
+}
+
+# same search & results (using jqu)
+$ jqu breed carnivora.json
+{
+  "cat": {
+    "domesticated": [
+      {
+        "breed": "Bengal"
+      },
+      {
+        "breed": "domestic short hair"
+      }
+    ]
+  },
+  "dog": [
+    {
+      "breed": "mutt"
+    },
+    {
+      "breed": "yellow labrador"
+    }
+  ]
+}
+
+# same search & results (with output transformation)
+# (this is actually how the -U option is implemented)
+$ jqg breed -t unflatten carnivora.json
+{
+  "cat": {
+    "domesticated": [
+      {
+        "breed": "Bengal"
+      },
+      {
+        "breed": "domestic short hair"
+      }
+    ]
+  },
+  "dog": [
+    {
+      "breed": "mutt"
+    },
+    {
+      "breed": "yellow labrador"
+    }
+  ]
+}
+
+# same search & results (via pipeline)
+$ jqg breed carnivora.json | jqg -u
+{
+  "cat": {
+    "domesticated": [
+      {
+        "breed": "Bengal"
+      },
+      {
+        "breed": "domestic short hair"
+      }
+    ]
+  },
+  "dog": [
+    {
+      "breed": "mutt"
+    },
+    {
+      "breed": "yellow labrador"
+    }
+  ]
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>extract and search</summary>
+
+```bash
+# normal search (without extract)
+$ jqg breed carnivora.json
+{
+  "cat.domesticated.0.breed": "Bengal",
+  "cat.domesticated.1.breed": "domestic short hair",
+  "dog.0.breed": "mutt",
+  "dog.1.breed": "yellow labrador"
+}
+
+# extract .dog, then search (using -X)
+$ jqg -X .dog breed carnivora.json
+{
+  "dog.0.breed": "mutt",
+  "dog.1.breed": "yellow labrador"
+}
+
+# same extract & search (using jqx)
+$ jqx .dog breed carnivora.json
+{
+  "dog.0.breed": "mutt",
+  "dog.1.breed": "yellow labrador"
+}
+```
+
+</details>
+
+[//]: # (==================================================================)
+
+## Input/Output Transformation Examples
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>simple search, with unflattened results</summary>
+
+```bash
+# normal search
+$ jqg breed carnivora.json
+{
+  "cat.domesticated.0.breed": "Bengal",
+  "cat.domesticated.1.breed": "domestic short hair",
+  "dog.0.breed": "mutt",
+  "dog.1.breed": "yellow labrador"
+}
+
+# same search & results unflattened via output transformation
+# (this is actually how the -U option is implemented)
+$ jqg breed -t unflatten carnivora.json
+{
+  "cat": {
+    "domesticated": [
+      {
+        "breed": "Bengal"
+      },
+      {
+        "breed": "domestic short hair"
+      }
+    ]
+  },
+  "dog": [
+    {
+      "breed": "mutt"
+    },
+    {
+      "breed": "yellow labrador"
+    }
+  ]
+}
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>extract with flattened results</summary>
+
+```bash
+# normal extract
+$ jqg -x .dog carnivora.json
+{
+  "dog": [
+    {
+      "petname": "Growler",
+      "breed": "mutt"
+    },
+    {
+      "petname": "Tiger",
+      "breed": "yellow labrador",
+      "feral": true,
+      "type": "domesticated"
+    },
+    {}
+  ]
+}
+
+# same extract flattened via output transformation
+$ jqg -x .dog -t flatten carnivora.json
+{
+  "dog.0.petname": "Growler",
+  "dog.0.breed": "mutt",
+  "dog.1.petname": "Tiger",
+  "dog.1.breed": "yellow labrador",
+  "dog.1.feral": true,
+  "dog.1.type": "domesticated",
+  "dog.2": {}
+}
+```
+
+</details>
+
+## License
+
+[Apache-2.0](../LICENSE)<br />
+© 2021 Joseph Casadonte
+

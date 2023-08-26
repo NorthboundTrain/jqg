@@ -33,7 +33,7 @@ use Data::Dumper; $Data::Dumper::Sortkeys = !0;
 use IO::File;
 
 #***** constants *****
-our($BATS_FILE) = "$FindBin::Bin/99-examples.bats";
+our($BATS_FILE) = "$FindBin::Bin/999-examples.bats";
 our($MD_FILE) = "$FindBin::Bin/../docs/jqg-examples.md";
 
 our($CARNIVORA_JSON_FILE) = "$FindBin::Bin/carnivora.json";
@@ -71,18 +71,18 @@ my($odd_values_json) = readJson($ODD_VALUES_JSON_FILE);
 $out->print(<<"EOS");
 # `jqg` Examples
 
-## Sample JSON for Examples
-
-These are the JSON files used in the unit test scripts. As such, the data in them is pretty nonsensical and even (perhaps) factually inaccurate; its primary purpose is to test various program conditions.
+There are three modes that can be invoked: search, unflatten, and extract. Most of the examples are for the search mode, though many of them can also be applied in pieces to the other two modes. There are also two composite modes each with their own script, search with unflattened results (`jqu`) and extract then search (`jqx`); both have examples shown below.
 
 [//]: # (------------------------------------------------------------------)
 [//]: # (--- NOTE: this file is generated using the gen-examples-md.pl   --)
 [//]: # (--- script and should not be edited directly                    --)
 [//]: # (------------------------------------------------------------------)
 
+*-- sample JSON - used for examples below --*
+
 [//]: # (==================================================================)
 <details>
-    <summary>carnivora.json</summary>
+<summary>carnivora.json</summary>
 
 ```json
 $carnivora_json
@@ -112,8 +112,8 @@ my($looking_for) = $TEST_ELEMENT_OR_HEADER;
 while (<$in>) {
     chomp;
 
-    s{\$CARNIVORA_JSON}{carnivora.json}g;
-    s{\$ODD_VALUES_JSON}{odd-values.json}g;
+    s{\$carnivora_json}{carnivora.json}g;
+    s{\$odd_values_json}{odd-values.json}g;
 
     if (($looking_for == $TEST_ELEMENT_OR_HEADER) && (m{^\s*\}\s*$})) {
         #----- dump previous test (if any) -----
@@ -126,6 +126,7 @@ while (<$in>) {
 EOS
 
             #----- loop through test elements -----
+            my($prev_etype) = 0;
             my($codeblock_opened) = 0;
             foreach my $elem (@{$test->{'elements'}}) {
                 my($element_type) = $elem->[0];
@@ -136,7 +137,7 @@ EOS
                     $out->say("```\n\n") if $codeblock_opened;
                     $codeblock_opened = 0;
 
-                    $out->say("<p/>\n\n**Test Skipped - ** *$element_value*\n");
+                    $out->say("<p/>\n\n**Test Skipped:** *$element_value*\n");
                     next;
                 }
 
@@ -145,6 +146,7 @@ EOS
 
                 #----- print out comments -----
                 if ($element_type eq "#") {
+                    $out->say("") if (($prev_etype) &&($prev_etype ne "#"));
                     $out->say("$element_type $element_value");
                 }
 
@@ -165,6 +167,8 @@ EOS
                 else {
                     die qq([ERROR] Unknown test element: [ $element_type : $element_value ]\n);
                 }
+
+                $prev_etype = $element_type;
             }
 
             #----- print test footer -----
@@ -195,7 +199,7 @@ EOS
     }
 
     # @test "[99] case-insensitive search (default)" {
-    elsif (($looking_for == $TEST_ELEMENT_OR_HEADER) && (m{^\s*\@test\s+"\[[^]]+]\s+(.*)"})) {
+    elsif (($looking_for == $TEST_ELEMENT_OR_HEADER) && (m{^\s*\@test\s+"(.*)"})) {
         my($test_desc) = $1;
 
         $test = { description => $test_desc, elements => [] };
@@ -206,8 +210,8 @@ EOS
            ((m{^\s*(#)\s*(.*?)\s*$}) ||                 # # some comment
             (m{^\s*(skip)\s+"([^"]+)\"}) ||             # skip "due to a bug ..."
             (m{^\s*(export)\s+(.*)\s*$}) ||             # export JQG_OPTS="-q -S"
-            (m{^\s*(run)\s+bash\s+-c.*?\s+"(.*)"\s*$}) ||  # run  bash -c "jq . $CARNIVORA_JSON | jqg feli | jq -S -c"
-            (m{^\s*(run)\s+(jqg\s+.*)\s*$}))) {         # run  jqg -v 'f|(?-i:M)' $CARNIVORA_JSON
+            (m{^\s*(run)\s+bash\s+-c.*?\s+"(.*)"\s*$}) ||  # run bash -c "jq . $CARNIVORA_JSON | jqg feli | jq -S -c"
+            (m{^\s*(run)\s+(jq[gux]?\s+.*)\s*$}))) {         # run jqg -v 'f|(?-i:M)' $CARNIVORA_JSON
         my($element_type) = $1;
         my($element_value) = $2;
 
@@ -233,6 +237,14 @@ EOS
         push(@{$test->{'elements'}}, ["output", $_]);
     }
 }
+
+$out->say(<<"EOS");
+
+## License
+
+[Apache-2.0](../LICENSE)<br />
+© 2021 Joseph Casadonte
+EOS
 
 $in->close;
 $out->close;

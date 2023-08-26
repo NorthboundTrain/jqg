@@ -5,11 +5,60 @@ All notable changes to this project will be documented in this file.
 The format used here is based upon [Common Changelog](https://common-changelog.org/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) guidelines.
 
+## [1.3.0] - 2023-08-26
+
+### Changed
+
+- **Breaking:** the exit code for JQG command line-related errors is now 2 (it was 1)
+- **Breaking:** use of a deprecated option (see below) will print a warning to STDERR
+- refactor main JQG algorithm to be more modular and intent-driven
+  - JQ filter is now created dynamically from filter sections
+- refactor test suite
+  - reorganize and centralize common functions and definitions
+  - break out into many smaller files for better test organization
+- alter semantics (but not effect) of the `-J` option
+  - it is now an alternate of the `--join_alt` option (with complete backwards compatibility, unless/until `--join_char` is used)
+- change definition of `--join_colon` to be a synonym of `--join ':'`
+- restructure the [jqg-filters.md](docs/jqg-filters.md) documentation to better present additional content and reduce repetitious text
+- bump `bats` from 1.6.0 to 1.7.0
+- bump `bats-assert` to 2.0.0 (latest)
+- bump `bats-file` to 0.3.0 (latest)
+
+### Added
+
+- add **extract** mode
+- provide `jqu` & `jqx` composite mode scripts
+- add `--join_char` option to set alternate join character (*default: `:`*)
+- add `--join_alt` option to use the alternate join character
+- provide options to manipulate input and output transformations independent of mode
+- add `-n, --empty_results_ok` option to indicate that returning no results is not an error (*default behavior*)
+- add `-N, --results_required` option to indicate that returning no results is an error (exit code: `1`)
+- add `--version` to print out the script version
+- add new JSON unit test files with specific structures
+- add very large JSON unit test files
+- add many new unit tests
+  - cover new features & command line options
+  - cover missing tests and option combinations
+  - ensure that `flatten_json`, `unflatten_json`, and `extract_json` are all [idempotent](https://en.wikipedia.org/wiki/Idempotent)
+- add benchmarking script (see [running-tests.md](test/running-tests.md#benchmarking))
+- add `.gitignore` to ignore backup `docs/jqg-examples-*.md` files
+
+### Deprecated
+
+**Note:** *These options will be removed in a future release.* Using these options will print a warning to STDERR.
+
+- deprecate use of `-f` and `--flatten`; use `-s` or `--search` instead
+- deprecate use of `--join_colon`; use `-j ':'`, `--join ':'`, `-J` or `--join_alt` instead
+
+### Fixed
+
+- fix edge case in `unflatten_json` that prevented it from being [idempotent](https://en.wikipedia.org/wiki/Idempotent)
+
 ## [1.2.2] - 2022-06-19
 
 ### Fixed
 
-- fixed broken links in documentation ([#6][gh-00006])
+- fix broken links in documentation ([#6][gh-00006])
 
 ## [1.2.1] - 2022-03-31
 
@@ -115,10 +164,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.1] - 2021-05-15
 
-_Initial release candidate._
+*Initial release candidate.*
 
 [//]: # (RELEASES)
 
+[1.3.0]: https://github.com/NorthboundTrain/jqg/tree/v1.3.0
 [1.2.2]: https://github.com/NorthboundTrain/jqg/tree/v1.2.2
 [1.2.1]: https://github.com/NorthboundTrain/jqg/tree/v1.2.1
 [1.2.0]: https://github.com/NorthboundTrain/jqg/tree/v1.2.0

@@ -9,7 +9,9 @@
     "key(with)parens": true,
     "bare-parens()": true,
     "left(paren-only": true,
-    "unmatched-left)-paren": false
+    "unmatched-left)-paren": false,
+    "dollar $ign": "both-sides-$now",
+    "period-in-value": "hello.world"
   },
   "two": [
     {
@@ -39,7 +41,19 @@
     "first",
     null,
     {},
-    "fourth"
+    999,
+    "fourth",
+    "hello.world"
   ],
+  "five": {
+    " leading space": "key",
+    "trailing space ": "key",
+    "  multi surround spaces   ": "key",
+    "   ": "only spaces - key",
+    "leading space": " value",
+    "trailing space": "value ",
+    "multi surround spaces": "   value  ",
+    "only spaces - value": "  "
+  },
   "end-string": "bar"
 }

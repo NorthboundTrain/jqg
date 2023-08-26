@@ -1,32 +1,30 @@
-# test the search criteria options:
+#!/usr/bin/env bats
 
-# -i case insensitive (default)
-# -I case sensitive
+#----------------------------------------------------------------------
+#--- jqg/test/010-search-criteria-options.bats
+#----------------------------------------------------------------------
+#--- test the search criteria options
+#----------------------------------------------------------------------
+#   -i / --ignore_case (default)
+#   -I / --match_case
+#
+#   -e / --include_empty (default)
+#   -E / --exclude_empty
+#
+#   -a / --search_all (default)
+#   -k / --search_keys
+#   -v / --search_values
+#----------------------------------------------------------------------
 
-# -k search keys
-# -v search values
-# -a search both (default)
-
-setup() {
-    load 'test_helper/bats-support/load'
-    load 'test_helper/bats-assert/load'
-    # load 'test_helper/bats-file/load'
-
-    # get the containing directory of this file
-    # use $BATS_TEST_FILENAME instead of ${BASH_SOURCE[0]} or $0,
-    # as those will point to the bats executable's location or the preprocessed file respectively
-    DIR="$( cd "$( dirname "$BATS_TEST_FILENAME" )" >/dev/null 2>&1 && pwd )"
-    # make executables in src/ visible to PATH
-    PATH="$DIR/../src:$PATH"
-
-    CARNIVORA_JSON=$DIR/carnivora.json
-    ODD_VALUES_JSON=$DIR/odd-values.json
-}
+setup_file() { load common; common_setup_file; }
+teardown_file() { load common; common_teardown_file; }
+setup() { load common; common_setup; }
+teardown() { load common; common_teardown; }
 
 
 # case sensitivity
-@test "[10] case insensitive (default)" {
-    run jqg tiger $CARNIVORA_JSON
+@test "case insensitive (default)" {
+    run jqg tiger $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -36,8 +34,8 @@ setup() {
 EOF
 }
 
-@test "[10] case insensitive (Upper)" {
-    run jqg -i Tiger $CARNIVORA_JSON
+@test "case insensitive (Upper)" {
+    run jqg -i Tiger $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -47,8 +45,8 @@ EOF
 EOF
 }
 
-@test "[10] case insensitive (Upper) <long>" {
-    run jqg --ignore_case Tiger $CARNIVORA_JSON
+@test "case insensitive (Upper) <long>" {
+    run jqg --ignore_case Tiger $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -58,8 +56,8 @@ EOF
 EOF
 }
 
-@test "[10] case insensitive (lower)" {
-    run jqg -i tiger $CARNIVORA_JSON
+@test "case insensitive (lower)" {
+    run jqg -i tiger $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -69,8 +67,8 @@ EOF
 EOF
 }
 
-@test "[10] case insensitive (ALL CAPS)" {
-    run jqg -i TIGER $CARNIVORA_JSON
+@test "case insensitive (ALL CAPS)" {
+    run jqg -i TIGER $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -82,8 +80,8 @@ EOF
 
 
 
-@test "[10] case sensitive (Upper)" {
-    run jqg -I Tiger $CARNIVORA_JSON
+@test "case sensitive (Upper)" {
+    run jqg -I Tiger $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -92,8 +90,8 @@ EOF
 EOF
 }
 
-@test "[10] case sensitive (Upper) <long>" {
-    run jqg --match_case Tiger $CARNIVORA_JSON
+@test "case sensitive (Upper) <long>" {
+    run jqg --match_case Tiger $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -102,8 +100,8 @@ EOF
 EOF
 }
 
-@test "[10] case sensitive (lower)" {
-    run jqg -I tiger $CARNIVORA_JSON
+@test "case sensitive (lower)" {
+    run jqg -I tiger $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -112,8 +110,8 @@ EOF
 EOF
 }
 
-@test "[10] case sensitive (ALL CAPS)" {
-    run jqg -I TIGER $CARNIVORA_JSON
+@test "case sensitive (ALL CAPS)" {
+    run jqg -I TIGER $carnivora_json
     assert_success
     assert_output "{}"
 }
@@ -121,8 +119,8 @@ EOF
 
 
 # search string selection
-@test "[10] search both (default)" {
-    run jqg domestic $CARNIVORA_JSON
+@test "search both (default)" {
+    run jqg domestic $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -139,8 +137,8 @@ EOF
 
 
 
-@test "[10] search both" {
-    run jqg -a domestic $CARNIVORA_JSON
+@test "search both" {
+    run jqg -a domestic $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -155,8 +153,8 @@ EOF
 EOF
 }
 
-@test "[10] search both <long>" {
-    run jqg --searchall domestic $CARNIVORA_JSON
+@test "search both <long>" {
+    run jqg --searchall domestic $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -171,8 +169,8 @@ EOF
 EOF
 }
 
-@test "[10] search keys" {
-    run jqg -k domestic $CARNIVORA_JSON
+@test "search keys" {
+    run jqg -k domestic $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -186,8 +184,8 @@ EOF
 EOF
 }
 
-@test "[10] search keys <long>" {
-    run jqg --searchkeys domestic $CARNIVORA_JSON
+@test "search keys <long>" {
+    run jqg --searchkeys domestic $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -201,8 +199,8 @@ EOF
 EOF
 }
 
-@test "[10] search values" {
-    run jqg -v domestic $CARNIVORA_JSON
+@test "search values" {
+    run jqg -v domestic $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -212,8 +210,8 @@ EOF
 EOF
 }
 
-@test "[10] search values <long>" {
-    run jqg --searchvalues domestic $CARNIVORA_JSON
+@test "search values <long>" {
+    run jqg --searchvalues domestic $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -225,8 +223,8 @@ EOF
 
 
 
-@test "[10] search for key-only string (default)" {
-    run jqg species $CARNIVORA_JSON
+@test "search for key-only string (default)" {
+    run jqg species $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -237,8 +235,8 @@ EOF
 EOF
 }
 
-@test "[10] search both for key-only string" {
-    run jqg -a species $CARNIVORA_JSON
+@test "search both for key-only string" {
+    run jqg -a species $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -249,8 +247,8 @@ EOF
 EOF
 }
 
-@test "[10] search keys for key-only string" {
-    run jqg -k species $CARNIVORA_JSON
+@test "search keys for key-only string" {
+    run jqg -k species $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -261,16 +259,16 @@ EOF
 EOF
 }
 
-@test "[10] search values for key-only string" {
-    run jqg -v species $CARNIVORA_JSON
+@test "search values for key-only string" {
+    run jqg -v species $carnivora_json
     assert_success
     assert_output "{}"
 }
 
 
 
-@test "[10] search for value-only string (default)" {
-    run jqg tiger $CARNIVORA_JSON
+@test "search for value-only string (default)" {
+    run jqg tiger $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -280,8 +278,8 @@ EOF
 EOF
 }
 
-@test "[10] search both for value-only string" {
-    run jqg -a tiger $CARNIVORA_JSON
+@test "search both for value-only string" {
+    run jqg -a tiger $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -291,14 +289,14 @@ EOF
 EOF
 }
 
-@test "[10] search keys for value-only string" {
-    run jqg -k tiger $CARNIVORA_JSON
+@test "search keys for value-only string" {
+    run jqg -k tiger $carnivora_json
     assert_success
     assert_output "{}"
 }
 
-@test "[10] search values for value-only string" {
-    run jqg -v tiger $CARNIVORA_JSON
+@test "search values for value-only string" {
+    run jqg -v tiger $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -311,8 +309,8 @@ EOF
 
 
 
-@test "[10] default empty filter" {
-    run jqg empty $ODD_VALUES_JSON
+@test "default empty filter" {
+    run jqg empty $odd_values_json
     assert_success
     assert_output - <<EOF
 {
@@ -323,8 +321,8 @@ EOF
 EOF
 }
 
-@test "[10] include empty JSON" {
-    run jqg -e empty $ODD_VALUES_JSON
+@test "include empty JSON" {
+    run jqg -e empty $odd_values_json
     assert_success
     assert_output - <<EOF
 {
@@ -335,8 +333,8 @@ EOF
 EOF
 }
 
-@test "[10] include empty JSON <long>" {
-    run jqg --include_empty empty $ODD_VALUES_JSON
+@test "include empty JSON <long>" {
+    run jqg --include_empty empty $odd_values_json
     assert_success
     assert_output - <<EOF
 {
@@ -347,8 +345,8 @@ EOF
 EOF
 }
 
-@test "[10] exclude empty JSON" {
-    run jqg -E empty $ODD_VALUES_JSON
+@test "exclude empty JSON" {
+    run jqg -E empty $odd_values_json
     assert_success
     assert_output - <<EOF
 {
@@ -357,8 +355,8 @@ EOF
 EOF
 }
 
-@test "[10] exclude empty JSON <long>" {
-    run jqg --exclude_empty empty  $ODD_VALUES_JSON
+@test "exclude empty JSON <long>" {
+    run jqg --exclude_empty empty  $odd_values_json
     assert_success
     assert_output - <<EOF
 {

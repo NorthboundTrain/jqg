@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #***************************************************************************
-#*** jqg - search JSON using jq, printing full path/flattened results
+#*** jqg - search, flatten, unflatten, and extract JSON using JQ
 #*** Copyright 2021 Joseph Casadonte
 #***************************************************************************
 #*** Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,186 +20,489 @@
 #***************************************************************************
 
 main() {
+    exit_code_nomatch=1
+    exit_code_error=2
+    exit_code_usage=0;
+
     #***** parse command line options *****
     #----- process $JQ_OPTS before those typed in -----
+    local JQG_OPTS_ARRAY
     read -ra JQG_OPTS_ARRAY <<< "$JQG_OPTS"
-    _getopt=$(pgetopt --options fsuiIkvarKVAReEj:Jq:Qdh --long flatten,search,unflatten,ignore_case,match_case,keys,values,all,raw,searchkeys,searchvalues,searchall,json,include_empty,exclude_empty,join:,join_colon,jqopt:,clear,debug,help,bug --name 'jqg' -- "${JQG_OPTS_ARRAY[@]}" "$@"); grc=$?
-    if [[ $grc != 0 ]] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+    local short_options="sfuxt:T:X:UiIkvaKVAeErRnNj:Jq:Qdh"
+    local long_options="search,flatten,unflatten,extract,output:,input:"
+    long_options="$long_options,composite_extract:,composite_unflatten,ignore_case,match_case"
+    long_options="$long_options,searchkeys,searchvalues,searchall,keys,values,all"
+    long_options="$long_options,include_empty,exclude_empty,raw,json,join:,join_alt,join_char:,join_colon"
+    long_options="$long_options,empty_results_ok,results_required"
+    long_options="$long_options,jqopt:,clear,debug,version,help,bug"
+
+    _getopt=$(pgetopt --options $short_options --long $long_options --name 'jqg' -- "${JQG_OPTS_ARRAY[@]}" "$@"); grc=$?
+    if [[ $grc != 0 ]] ; then echo "Terminating..." >&2 ; exit $exit_code_error ; fi
 
     eval set -- "$_getopt"
 
     #***** release version *****
-    jqg_version="v1.2.2"
+    local jqg_version="v1.3.0"
 
     #***** determine JQ binary *****
-    jq_bin=${JQ_BIN:-jq}
+    local jq_bin=${JQ_BIN:-jq}
 
     #***** set default options *****
-    def_join_char="."
-    def_search_elem=".[]"
-    def_case_flag=i
-    def_empty_tests="empty_leafs"
-    def_output_filter="."
-    def_strip_array="."
+    mode=search
+    ignore_case=true
+    search_loc=all
+    preserve_empty_elements=true
+    post_process_filter=none
+    jq_raw=false
+    require_results=false
 
-    join_char=$def_join_char
-    search_elem=$def_search_elem
-    case_regex=$def_case_flag
-    empty_tests=$def_empty_tests
-    out_filter=$def_output_filter
-    strip_array=$def_strip_array
+    join_char="."
+    alt_join_char=":"
 
-    jqflags=
-    jqraw=
-    mode=jqg
+    jqflags=()
+
+    input_transformation=flatten
+    output_transformation=none
+
+    declare -A show_deprecated_warnings
 
     #***** finish processing the options *****
     while true; do
         case "$1" in
-        # mode selection
-            -f | --flatten ) mode=jqg; shift ;;
-            -s | --search ) mode=jqg; shift ;;
-            -u | --unflatten ) mode=unflatten; shift ;;
+    # major modes
+            -s | --search )    mode=search;    input_transformation=flatten;
+                               output_transformation=none; shift ;;
 
-        # mode == jqg
-            -i | --ignore_case ) case_regex=$def_case_flag; shift ;;
-            -I | --match_case ) case_regex=; shift ;;
+            # deprecated
+            -f | --flatten )   mode=search;    input_transformation=flatten;
+                               output_transformation=none; show_deprecated_warnings[flatten]="true"; shift ;;
 
-            -k | --searchkeys ) search_elem='.key'; shift ;;
-            -v | --searchvalues ) search_elem='.value'; shift ;;
-            -a | --searchall ) search_elem=$def_search_elem; shift ;;
+            -u | --unflatten ) mode=unflatten; input_transformation=none;
+                               output_transformation=none; shift ;;
 
-            -K | --keys ) out_filter='keys_unsorted'; shift ;;
-            -V | --values ) out_filter='[ .[] ]'; shift ;;
-            -A | --all ) out_filter=$def_output_filter; shift ;;
+            -x | --extract )   mode=extract;   input_transformation=unflatten;
+                               output_transformation=none;
+                               unset pre_extract; shift ;;
 
-            -e | --include_empty ) empty_tests=$def_empty_tests; shift ;;
-            -E | --exclude_empty ) empty_tests=false; shift ;;
+    # mode: all
+            -t | --output ) output_transformation="$2"; shift 2;;
+            -T | --input )  input_transformation="$2";  shift 2;;
 
-            -r | --raw ) jqraw='-r'; strip_array='.[]'; shift ;;
-            -R | --json ) jqraw=; strip_array=$def_strip_array; shift ;;
+    # special combos modes
+            -X | --composite_extract )   mode=search; input_transformation=extract;
+                                         output_transformation=none; pre_extract=$2;
+                                         shift 2 ;;
 
-        # mode == (jqg || unflatten)
-            -j | --join ) join_char="$2"; shift 2 ;;
-            -J | --join_colon ) join_char=':'; shift ;;
+            -U | --composite_unflatten ) mode=search; input_transformation=flatten;
+                                         output_transformation=unflatten;
+                                         shift ;;
 
-            -q | --jqopt ) jqflags="$jqflags $2"; shift 2 ;;
-            -Q | --clear ) jqflags=; shift ;;
+    # mode: search
+            -i | --ignore_case ) ignore_case=true;  shift ;;
+            -I | --match_case )  ignore_case=false; shift ;;
 
-        # mode == common
+    # mode: search
+            -k | --searchkeys )   search_loc=keys;   shift ;;
+            -v | --searchvalues ) search_loc=values; shift ;;
+            -a | --searchall )    search_loc=all;    shift ;;
+
+    # mode: all (meant for flattened output only)
+            -K | --keys )   post_process_filter=keys_only;   shift ;;
+            -V | --values ) post_process_filter=values_only; shift ;;
+            -A | --all )    post_process_filter=none;        shift ;;
+
+    # flatten filter options
+            -e | --include_empty ) preserve_empty_elements=true;  shift ;;
+            -E | --exclude_empty ) preserve_empty_elements=false; shift ;;
+
+    # with flattened output
+            -r | --raw ) jq_raw=true;   shift ;;
+            -R | --json ) jq_raw=false; shift ;;
+
+    # mode: search
+            -n | --empty_results_ok ) require_results=false; shift ;;
+            -N | --results_required ) require_results=true;  shift ;;
+
+    # with flattened output / unflattened input
+            -j | --join )       join_char="$2"; shift 2 ;;
+            -J | --join_alt )   join_char="$alt_join_char";  shift ;;
+                 --join_char )  alt_join_char="$2"; shift 2 ;;
+            # deprecated
+                 --join_colon ) join_char=":"; show_deprecated_warnings[colon]="true"; shift ;;
+
+    # mode: all
+            -q | --jqopt ) jqflags+=( "$2" ); shift 2 ;;
+            -Q | --clear ) jqflags=();        shift ;;
+
+    # mode: all
             -d | --debug ) debug=true; shift ;;
+
+                 --version )
+                    echo "$jqg_version"
+                    exit $exit_code_usage
+                    ;;
+
             -h | --help )
-                echo
-                echo "usage: jqg [-f|-s] [-i|-I] [-a|-k|-v] [-A|-K|-V] [-j=.|-J] [-R|-r] [-e|-E] [-q <opt>] [-Q] [-d] [--bug] [CRITERIA [FNAME]]"
-                echo "usage: jqg -u [-j=.|-J] [-q <opt>] [-Q] [-d] [FNAME]"
-                echo "usage: jqg --bug"
-                echo "usage: jqg -h"
-                exit 0
-                ;;
+                    echo
+                    echo "usage: jqg [-s|-U|-X <SELECTOR>] [-i|-I] [-a|-k|-v] [-A|-K|-V] [-e|-E] [-r|-R] [-j=<CHAR>|-J] [FILE|CRITERIA|CRITERIA FILE]"
+                    echo "usage: jqg -u [-j=<CHAR>|-J] [FILE]"
+                    echo "usage: jqg -x <SELECTOR> [FILE]"
+                    echo "   (common)   [-t flatten|unflatten|none] [-T flatten|unflatten|extract|none] [-n|-N] [-q <JQ OPT>] [-Q] [-d]"
+                    echo
+                    echo "special usage: jqu ==> jqg -U (implies -s) "
+                    echo "special usage: jqx ==> jqg -X (implies -s) "
+                    echo
+                    echo "usage: jqg --bug"
+                    echo "usage: jqg (-h|--help)"
+                    echo
+                    echo "Full man page at: docs/jqg.md or https://github.com/NorthboundTrain/jqg/blob/main/docs/jqg.md"
+                    echo "usage: jqg (-h|--help)"
+
+                    exit $exit_code_usage
+                    ;;
 
             --bug )
-                echo
-                echo
-                echo "You can log a bug by going to: "
-                echo
-                echo "  https://github.com/NorthboundTrain/jqg/issues"
-                echo
-                echo
-                echo "Please include the following information in your bug report:"
-                echo
-                echo "JQG: $jqg_version"
-                echo "JQ: $($jq_bin --version)"
-                echo "BASH: $SHELL -- $BASH_VERSION"
-                echo "\$JQG_OPTS: $JQG_OPTS"
-                echo "\$JQ_BIN: $JQ_BIN"
-                echo
-                echo
-                exit 0
-                ;;
+                    echo
+                    echo
+                    echo "You can log a bug by going to: "
+                    echo
+                    echo "  https://github.com/NorthboundTrain/jqg/issues"
+                    echo
+                    echo
+                    echo "Please include the following information in your bug report:"
+                    echo
+                    echo "JQG: $jqg_version"
+                    echo "JQ: $($jq_bin --version)"
+                    echo "BASH: $SHELL -- $BASH_VERSION"
+                    echo "\$JQG_OPTS: $JQG_OPTS"
+                    echo "\$JQ_BIN: $JQ_BIN"
+                    echo
+                    echo
+
+                    exit $exit_code_usage
+                    ;;
 
             -- ) shift; break ;;
             * ) break ;;
         esac
     done
 
-    case "$mode" in
-        "unflatten" ) unflatten_mode "$@" ;;
-        "jqg" ) standard_mode "$@" ;;
-        * ) echo "[ERROR] Unknown mode <$mode> - abending..."; exit 1 ;;
-    esac
-}
+    #***** grab criteria and/or filename *****
+    #----- [filename|criteria|criteria filename]
+    arg1=$1; shift
+    arg2=$1; shift
 
-
-unflatten_mode()
-{
-    #***** setup JQ filter *****
-    read -r -d '' filter <<EOF
-def unflatten_json:
-    reduce to_entries[] as \$element
-        (null; setpath(\$element.key / "$join_char" | map(tonumber? // .); \$element.value));
-
-unflatten_json
-EOF
-
-    run_jq "$@"
-}
-
-standard_mode()
-{
-    #----- special case: no -r without -V|-A -----
-    if [[ "$out_filter" == "$def_output_filter" ]]; then
-        strip_array=$def_strip_array
-    fi
-
-    #***** grab the regular expression to search for *****
-    regex=${1:-.}; shift
-
-    #----- special case when "regex" is just '.' -----
-    if [[ "$regex" == "." ]]; then
-        filter_json=".";
+    if [[ -n "$arg2" ]]; then
+        criteria=$arg1
+        filename=$arg2
+    elif [[ -n "$arg1" ]]; then
+        if [[ -f "$arg1" ]]; then
+            criteria="."
+            filename=$arg1
+        else
+            criteria=$arg1
+            filename=
+        fi
     else
-        filter_json="filter_json"
+        criteria="."
+        filename=
     fi
 
-    #***** construct the JQ filter *****
-    read -r -d '' filter <<EOF
-def empty_leafs: select(tostring | . == "{}" or . == "[]");
+    #***** special case: criteria *****
+    if [[ "$criteria" == "." ]]; then
+        case "$mode" in
+            search | extract ) mode=none ;;
+        esac
+    else
+        case "$mode" in
+            flatten ) criteria=. ;;
+        esac
+    fi
 
-def flatten_json:
-    . as \$data |
-    [ path(.. | select(scalars|tostring), select($empty_tests)) ] |
-    map({ (map(tostring) | join("$join_char")) : (. as \$path | . = \$data | getpath(\$path)) }) |
-    reduce .[] as \$item ({ }; . + \$item);
+    #***** special case: filename *****
+    : "${filename:=/dev/stdin}"
 
-def filter_json:
-    to_entries |
-    map(select($search_elem | tostring | test("${regex//\\/\\\\}"; "${case_regex}"))) |
-    from_entries;
+    #***** construct the filter *****
+    declare -a filter_list
+    declare -A filter_def_added
+    jq_filter=
 
-def format_output: $out_filter | $strip_array;
+    #---- expected input -----
+    case "$input_transformation" in
+        flatten   ) add_flatten_filter_def ;;
+        unflatten ) add_unflatten_filter_def ;;
+        extract   ) add_unflatten_filter_def;
+                    add_extract_filter_def;
+                    add_flatten_filter_def ;;
+        none      ) ;; # do nothing
+        * ) echo "[ERROR] unknown input_transformation: [[ $input_transformation ]]" >&2; exit $exit_code_error ;;
+    esac
 
-flatten_json | $filter_json | format_output
-EOF
+    #----- mode filter -----
+    case "$mode" in
+        search    ) add_search_filter_def ;;
+        extract   ) add_extract_filter_def ;;
+        unflatten ) add_unflatten_filter_def ;;
+        none      ) ;; # do nothing
+        * ) echo "[ERROR] unknown mode: [[ $mode ]]" >&2; exit $exit_code_error ;;
+    esac
 
-    run_jq "$@"
-}
+    #---- expected output -----
+    case "$output_transformation" in
+        flatten )   add_flatten_filter_def ;;
+        unflatten ) add_unflatten_filter_def ;;
+        none ) ;; # do nothing
+        * ) echo "[ERROR] unknown output_transformation: [[ $output_transformation ]]" >&2; exit $exit_code_error ;;
+    esac
 
-run_jq()
-{
+    #----- possibly count the results -----
+    add_require_results_filter_def
+
+    #----- possibly add post-process the output -----
+    add_post_process_filter_def
+
+    #----- add the list of filters -----
+    add_filter_list_pipeline
+
+    #***** deal with JQ's -r argument *****
+    local raw_arg
+    case "$jq_raw" in
+        true )  raw_arg="-r" ;;
+        false ) raw_arg= ;;
+    esac
+
+    #***** possibly print out deprecation message *****
+    if [[ ${#show_deprecated_warnings[*]} -gt 0 ]]; then
+        for key in "${!show_deprecated_warnings[@]}"
+        do
+            if [[ "$key" == "flatten" ]]; then
+                echo >&2
+                echo "[WARNING] The use of the command line arguments \"-f\" and \"--flatten\" are" >&2
+                echo "          deprecated; they will be removed in a future release. Please switch" >&2
+                echo "          to using \"-s\" or \"--search\"." >&2
+                echo >&2
+            elif [[ "$key" == "colon" ]]; then
+                echo >&2
+                echo "[WARNING] The use of the command line argument \"--join_colon\" is" >&2
+                echo "          deprecated; it will be removed in a future release. Please switch" >&2
+                echo "          to using \"-J\", \"--join_alt\", or \"--join_char\"." >&2
+                echo >&2
+            else
+                echo "[ERROR] unknown deprecation warning key: [[ $key ]]" >&2
+                exit $exit_code_error
+            fi
+        done
+
+    fi
+
     #***** debug output *****
     if [[ "$debug" == "true" ]]; then
-        echo; echo; echo; echo "$filter"; echo; echo; echo
-        exit
+        echo "CMDLINE: \"$jq_bin\"${raw_arg:+ \"$raw_arg\"} " "${jqflags[@]}" " \"<FILTER>\" < \"$filename\""
+        echo
+        echo "FILTER:"
+        echo "$jq_filter"
+        echo
+
+        exit $exit_code_usage
     fi
 
     #***** execute the command *****
-    # shellcheck disable=SC2086
-    $jq_bin $jqraw $jqflags "$filter" < "${1:-/dev/stdin}"
+    "$jq_bin"${raw_arg:+ "$raw_arg"} "${jqflags[@]}" "$jq_filter" < "$filename"
     rc=$?
 
     exit $rc
 }
 
+#***************************************************************************
+add_flatten_filter_def()
+{
+    #----- always add to list of filters -----
+    filter_list+=( "flatten_json" );
+
+    #----- only add definition once -----
+    if [[ -z "${filter_def_added[flatten]+exists}" ]]; then
+        local empty_tests
+        case "$preserve_empty_elements" in
+            true )  empty_tests="empty_leafs";;
+            false ) empty_tests="false" ;;
+        esac
+
+        read -r -d '' jq_filter <<EOF
+$jq_filter
+
+def empty_leafs:
+    select(tostring | . == "{}" or . == "[]");
+
+def flatten_json:
+    . as \$data |
+    [ path(.. | select((scalars|tostring), $empty_tests)) ] |
+    map({ (map(tostring) | join("$join_char")) : (. as \$path | . = \$data | getpath(\$path)) }) |
+    reduce .[] as \$item ({ }; . + \$item);
+EOF
+
+        #------ do not add again in the future -----
+        filter_def_added[flatten]+="done"
+    fi
+
+}
+
+#***************************************************************************
+add_unflatten_filter_def()
+{
+    #----- always add to list of filters -----
+    filter_list+=( "unflatten_json" );
+
+    #----- only add definition once -----
+    if [[ -z "${filter_def_added[unflatten]+exists}" ]]; then
+        read -r -d '' jq_filter <<EOF
+$jq_filter
+
+def unflatten_json:
+    reduce to_entries[] as \$entry
+        (null; setpath(\$entry.key | tostring / "$join_char" | map(tonumber? // .); \$entry.value));
+EOF
+
+        #------ do not add again in the future -----
+        filter_def_added[unflatten]+="done"
+    fi
+}
+
+#***************************************************************************
+add_search_filter_def()
+{
+    #----- always add to list of filters -----
+    filter_list+=( "search_filter" );
+
+    #----- only add definition once -----
+    if [[ -z "${filter_def_added[search]+exists}" ]]; then
+        local case_regex
+        case "$ignore_case" in
+            true  ) case_regex=i ;;
+            false ) case_regex= ;;
+        esac
+
+        local search_elem
+        case "$search_loc" in
+            keys )   search_elem=".key" ;;
+            values ) search_elem=".value" ;;
+            all )    search_elem=".[]" ;;
+        esac
+
+        read -r -d '' jq_filter <<EOF
+$jq_filter
+
+def search_filter:
+    to_entries |
+    map(select($search_elem | tostring | test("${criteria//\\/\\\\}"; "${case_regex}"))) |
+    from_entries;
+EOF
+
+        #------ do not add again in the future -----
+        filter_def_added[search]+="done"
+    fi
+}
+
+#***************************************************************************
+add_require_results_filter_def()
+{
+    #----- short-circuit -----
+    if [[ "$require_results" != "true" ]]; then
+        return
+    fi
+
+    #----- always add to list of filters -----
+    filter_list+=( "require_results" );
+
+    #----- only add definition once -----
+    if [[ -z "${filter_def_added[require_results]+exists}" ]]; then
+        read -r -d '' jq_filter <<EOF
+$jq_filter
+
+def require_results:
+    if length > 0 then . else (. = "" | halt_error($exit_code_nomatch)) end;
+EOF
+
+        #------ do not add again in the future -----
+        filter_def_added[require_results]+="done"
+    fi
+}
+
+#***************************************************************************
+add_extract_filter_def()
+{
+    #----- always add to list of filters -----
+    filter_list+=( "extract_json" );
+
+# to return {} or [] instead of null:
+#   . as \$orig | reduce(...) // (\$orig | if type == "array" then [] else {} end);
+
+    #----- only add definition once -----
+    if [[ -z "${filter_def_added[extract]+exists}" ]]; then
+        read -r -d '' jq_filter <<EOF
+$jq_filter
+
+def extract_json:
+  reduce (
+    path(${pre_extract:-$criteria}) as \$selector_path | tostream |
+        select(length > 1 and (.[0] | index(\$selector_path) == 0))
+    ) as \$selected ( null; setpath(\$selected[0]; \$selected[1]) );
+EOF
+
+        #------ do not add again in the future -----
+        filter_def_added[extract]+="done"
+    fi
+}
+
+#***************************************************************************
+add_post_process_filter_def()
+{
+    #----- short-circuit -----
+    if [[ "$post_process_filter" == "none" ]]; then
+        return
+    fi
+
+    #----- always add to list of filters -----
+    filter_list+=( "post_process_output" );
+
+    #----- only add definition once -----
+    if [[ -z "${filter_def_added[post_process]+exists}" ]]; then
+        local output_filter
+        case "$post_process_filter" in
+            keys_only )   output_filter='keys_unsorted' ;;
+            values_only ) output_filter='[ .[] ]' ;;
+        esac
+
+        local strip_array
+        case "$jq_raw" in
+            true )  strip_array=".[]" ;;
+            false ) strip_array="." ;;
+        esac
+
+        read -r -d '' jq_filter <<EOF
+$jq_filter
+
+def post_process_output:
+    $output_filter | $strip_array;
+EOF
+
+        #------ do not add again in the future -----
+        filter_def_added[post_process]+="done"
+    fi
+}
+
+#***************************************************************************
+add_filter_list_pipeline()
+{
+    local all_filters="${filter_list[*]}"
+    read -r -d '' jq_filter <<EOF
+$jq_filter
+
+${all_filters// / | }
+EOF
+}
+
+#***************************************************************************
 # spellcheck:start-ignore-block
 pgetopt() {
   # pure-getopt, a drop-in replacement for GNU getopt in pure Bash.

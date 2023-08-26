@@ -1,29 +1,25 @@
-# test the output content options:
+#!/usr/bin/env bats
 
-# -K output keys
-# -V output values
-# -A output all (default)
+#----------------------------------------------------------------------
+#--- jqg/test/020-output-content-options.bats
+#----------------------------------------------------------------------
+#--- test the output content options
+#----------------------------------------------------------------------
+#   -K / --keys
+#   -V / --values
+#   -A / --all (default)
+#----------------------------------------------------------------------
 
-setup() {
-    load 'test_helper/bats-support/load'
-    load 'test_helper/bats-assert/load'
-    # load 'test_helper/bats-file/load'
-
-    # get the containing directory of this file
-    # use $BATS_TEST_FILENAME instead of ${BASH_SOURCE[0]} or $0,
-    # as those will point to the bats executable's location or the preprocessed file respectively
-    DIR="$( cd "$( dirname "$BATS_TEST_FILENAME" )" >/dev/null 2>&1 && pwd )"
-    # make executables in src/ visible to PATH
-    PATH="$DIR/../src:$PATH"
-
-    CARNIVORA_JSON=$DIR/carnivora.json
-}
+setup_file() { load common; common_setup_file; }
+teardown_file() { load common; common_teardown_file; }
+setup() { load common; common_setup; }
+teardown() { load common; common_teardown; }
 
 
 
 # output everthing (default)
-@test "[20] default output (object)" {
-    run jqg mammal $CARNIVORA_JSON
+@test "default output (object)" {
+    run jqg mammal $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -33,8 +29,8 @@ setup() {
 EOF
 }
 
-@test "[20] default output (array)" {
-    run jqg feral $CARNIVORA_JSON
+@test "default output (array)" {
+    run jqg feral $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -48,8 +44,8 @@ EOF
 EOF
 }
 
-@test "[20] default output (mixed - hanging array)" {
-    run jqg feli $CARNIVORA_JSON
+@test "default output (mixed - hanging array)" {
+    run jqg feli $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -60,8 +56,8 @@ EOF
 EOF
 }
 
-@test "[20] default output (mixed - embedded array)" {
-    run jqg king $CARNIVORA_JSON
+@test "default output (mixed - embedded array)" {
+    run jqg king $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -71,8 +67,8 @@ EOF
 EOF
 }
 
-@test "[20] default output (empty)" {
-    run jqg ursa $CARNIVORA_JSON
+@test "default output (empty)" {
+    run jqg ursa $carnivora_json
     assert_success
     assert_output "{}"
 }
@@ -80,8 +76,8 @@ EOF
 
 
 # output everthing
-@test "[20] output all (object)" {
-    run jqg -A mammal $CARNIVORA_JSON
+@test "output all (object)" {
+    run jqg -A mammal $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -91,8 +87,8 @@ EOF
 EOF
 }
 
-@test "[20] output all (object) <long>" {
-    run jqg --all mammal $CARNIVORA_JSON
+@test "output all (object) <long>" {
+    run jqg --all mammal $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -102,8 +98,8 @@ EOF
 EOF
 }
 
-@test "[20] output all (array)" {
-    run jqg -A feral $CARNIVORA_JSON
+@test "output all (array)" {
+    run jqg -A feral $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -117,8 +113,8 @@ EOF
 EOF
 }
 
-@test "[20] output all (mixed - hanging array)" {
-    run jqg -A feli $CARNIVORA_JSON
+@test "output all (mixed - hanging array)" {
+    run jqg -A feli $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -129,8 +125,8 @@ EOF
 EOF
 }
 
-@test "[20] output all (mixed - embedded array)" {
-    run jqg -A king $CARNIVORA_JSON
+@test "output all (mixed - embedded array)" {
+    run jqg -A king $carnivora_json
     assert_success
     assert_output - <<EOF
 {
@@ -140,8 +136,8 @@ EOF
 EOF
 }
 
-@test "[20] output all (empty)" {
-    run jqg -A ursa $CARNIVORA_JSON
+@test "output all (empty)" {
+    run jqg -A ursa $carnivora_json
     assert_success
     assert_output "{}"
 }
@@ -149,8 +145,8 @@ EOF
 
 
 # output keys
-@test "[20] output keys (object)" {
-    run jqg -K mammal $CARNIVORA_JSON
+@test "output keys (object)" {
+    run jqg -K mammal $carnivora_json
     assert_success
     assert_output - <<EOF
 [
@@ -160,8 +156,8 @@ EOF
 EOF
 }
 
-@test "[20] output keys (object) <long>" {
-    run jqg --keys mammal $CARNIVORA_JSON
+@test "output keys (object) <long>" {
+    run jqg --keys mammal $carnivora_json
     assert_success
     assert_output - <<EOF
 [
@@ -171,8 +167,8 @@ EOF
 EOF
 }
 
-@test "[20] output keys (array)" {
-    run jqg -K feral $CARNIVORA_JSON
+@test "output keys (array)" {
+    run jqg -K feral $carnivora_json
     assert_success
     assert_output - <<EOF
 [
@@ -186,8 +182,8 @@ EOF
 EOF
 }
 
-@test "[20] output keys (mixed - hanging array)" {
-    run jqg -K feli $CARNIVORA_JSON
+@test "output keys (mixed - hanging array)" {
+    run jqg -K feli $carnivora_json
     assert_success
     assert_output - <<EOF
 [
@@ -198,8 +194,8 @@ EOF
 EOF
 }
 
-@test "[20] output keys (mixed - embedded array)" {
-    run jqg -K king $CARNIVORA_JSON
+@test "output keys (mixed - embedded array)" {
+    run jqg -K king $carnivora_json
     assert_success
     assert_output - <<EOF
 [
@@ -209,8 +205,8 @@ EOF
 EOF
 }
 
-@test "[20] output keys (empty)" {
-    run jqg -K ursa $CARNIVORA_JSON
+@test "output keys (empty)" {
+    run jqg -K ursa $carnivora_json
     assert_success
     assert_output "[]"
 }
@@ -218,8 +214,8 @@ EOF
 
 
 # output values
-@test "[20] output values (object)" {
-    run jqg -V mammal $CARNIVORA_JSON
+@test "output values (object)" {
+    run jqg -V mammal $carnivora_json
     assert_success
     assert_output - <<EOF
 [
@@ -229,8 +225,8 @@ EOF
 EOF
 }
 
-@test "[20] output values (object) <long>" {
-    run jqg --values mammal $CARNIVORA_JSON
+@test "output values (object) <long>" {
+    run jqg --values mammal $carnivora_json
     assert_success
     assert_output - <<EOF
 [
@@ -240,8 +236,8 @@ EOF
 EOF
 }
 
-@test "[20] output values (array)" {
-    run jqg -V feral $CARNIVORA_JSON
+@test "output values (array)" {
+    run jqg -V feral $carnivora_json
     assert_success
     assert_output - <<EOF
 [
@@ -255,8 +251,8 @@ EOF
 EOF
 }
 
-@test "[20] output values (mixed - hanging array)" {
-    run jqg -V feli $CARNIVORA_JSON
+@test "output values (mixed - hanging array)" {
+    run jqg -V feli $carnivora_json
     assert_success
     assert_output - <<EOF
 [
@@ -267,8 +263,8 @@ EOF
 EOF
 }
 
-@test "[20] output value (mixed - embedded array)" {
-    run jqg -V king $CARNIVORA_JSON
+@test "output value (mixed - embedded array)" {
+    run jqg -V king $carnivora_json
     assert_success
     assert_output - <<EOF
 [
@@ -278,16 +274,16 @@ EOF
 EOF
 }
 
-@test "[20] output values (empty)" {
-    run jqg -V ursa $CARNIVORA_JSON
+@test "output values (empty)" {
+    run jqg -V ursa $carnivora_json
     assert_success
     assert_output "[]"
 }
 
 
 # search keys, ouput values
-@test "[20] search keys, output values" {
-    run jqg -k king -V $CARNIVORA_JSON
+@test "search keys, output values" {
+    run jqg -k king -V $carnivora_json
     assert_success
     assert_output - <<EOF
 [
@@ -297,8 +293,8 @@ EOF
 }
 
 # search values, ouput keys
-@test "[20] search values, output keys" {
-    run jqg -v king -K $CARNIVORA_JSON
+@test "search values, output keys" {
+    run jqg -v king -K $carnivora_json
     assert_success
     assert_output - <<EOF
 [
