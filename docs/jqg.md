@@ -27,7 +27,7 @@ The primary purpose of JQG is to flatten the supplied JSON structure using JQ an
 
 ### Arguments
 
-Flatten and then search the JSON input for `CRITERIA`, using the JQ Identity filter '`.`' if no `CRITERIA` is supplied, treating `CRITERIA` as a regular expression otherwise (JQG uses the [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions) engine built into JQ; see the JQ [man page](https://stedolan.github.io/jq/manual/#RegularexpressionsPCRE) for more details). Alternately, unflatten JSON input from `FILE`, or extract JSON from `FILE` using a valid `SELECTOR`.
+Flatten and then search the JSON input for `CRITERIA`, using the JQ Identity filter '`.`' if no `CRITERIA` is supplied, treating `CRITERIA` as a regular expression otherwise (JQG uses the [PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions) engine built into JQ; see the JQ [man page](https://jqlang.github.io/jq/manual/#regular-expressions) for more details). Alternately, unflatten JSON input from `FILE`, or extract JSON from `FILE` using a valid `SELECTOR`.
 
 `FILE` will be processed as a JSON file, reading `STDIN` if not specified. If both `CRITERIA` and `FILE` are given, they must be given in that specific order. If only one is given, it will be treated as a `FILE` if it exists on the local filesystem, otherwise it will be treated as `CRITERIA`.
 
@@ -185,7 +185,7 @@ jq: error (at <stdin>:4): Cannot index array with string "dolor"
 
 #### Extract Mode
 
-The extract mode can be used to create a subset of the original JSON via a simple JQ [Object Identifier-Index](https://stedolan.github.io/jq/manual/#ObjectIdentifier-Index:.foo,.foo.bar) or [Array Index](https://stedolan.github.io/jq/manual/#ArrayIndex:.[2]), collectively referred to as "selectors" here. Extracting via an array selector may result in sparse array output.
+The extract mode can be used to create a subset of the original JSON via a simple JQ [Object Identifier-Index](https://jqlang.github.io/jq/manual/#object-identifier-index) or [Array Index](https://jqlang.github.io/jq/manual/#array-index), collectively referred to as "selectors" here. Extracting via an array selector may result in sparse array output.
 
 **Note:** the extraction process should be [idempotent].
 
@@ -310,7 +310,7 @@ Mandatory arguments to long options are mandatory for short options, as well.
 | `-V, --values` | output just values                   |
 | `-A, --all`    | output keys and values (*default*)   |
 |                |                                      |
-| `-r, --raw`    | output as raw strings (ignored with `-A`) -- see JQ's [raw output](https://stedolan.github.io/jq/manual/#Invokingjq) for more info |
+| `-r, --raw`    | output as raw strings (ignored with `-A`) -- see JQ's [raw output](https://jqlang.github.io/jq/manual/#invoking-jq) for more info |
 | `-R, --json`   | output as formatted JSON (*default*) |
 
 ### Flattening/Unflattening Options
@@ -385,6 +385,6 @@ License: [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 ## SEE ALSO
 
-- [`jq`](https://stedolan.github.io/jq/)
+- [`jq`](https://jqlang.github.io/jq/)
 
 [idempotent]: https://en.wikipedia.org/wiki/Idempotent

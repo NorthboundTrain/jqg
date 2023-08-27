@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format used here is based upon [Common Changelog](https://common-changelog.org/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) guidelines.
 
+## [1.3.1] - 2023-08-27
+
+### Changed
+
+- change reference URLs from https://stedolan.github.io/jq to https://jqlang.github.io/jq
+- change reference URLs from https://github.com/stedolan/jq/wiki to https://github.com/jqlang/jq/wiki
+
+### Added
+
+- add note to top of [jqg-filters.md](docs/jqg-filters.md) indicating incomplete rewrite of documentation
+
 ## [1.3.0] - 2023-08-26
 
 ### Changed
@@ -168,6 +179,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [//]: # (RELEASES)
 
+[1.3.1]: https://github.com/NorthboundTrain/jqg/tree/v1.3.1
 [1.3.0]: https://github.com/NorthboundTrain/jqg/tree/v1.3.0
 [1.2.2]: https://github.com/NorthboundTrain/jqg/tree/v1.2.2
 [1.2.1]: https://github.com/NorthboundTrain/jqg/tree/v1.2.1

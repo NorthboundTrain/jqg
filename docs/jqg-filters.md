@@ -1,18 +1,20 @@
 # The `jqg` Filter - Explained
 
-A JQ program is a series of filters that data goes through, transforming the input according to the rules of the filter being executed, producing some output that is then passed along to the next filter or presented as the end result. The JQ syntax itself is pretty dense stuff, and the JQG filters are pretty complicated for a JQ newbie like me to understand -- it wasn't at all intuitive (to me, at least) what was happening and why through most of the steps. I got some elements of the original JQG filter to work through trial and error, without a full understanding of why it did or didn't work as expected, so I wrote this document as much for my own edification as anything else.
+**NOTE:** *the rewrite of this page for v1.3.0 is not quite complete; any remaining work is noted below*
 
-The basic syntactical structure, though, is pretty simple. Different filters are separated by a pipe ('`|`') or a comma ('`,`'); the pipe is analogous to a shell pipe, where the output of the first filter is used as the input to the following filter, whereas with the comma, the input to each filter is the same and the output is the concatenation of each filter's results. Collections of filters can be saved off as a named function that can then be used as a filter somewhere else. Function arguments are pretty wonky, but JQG's functions don't use them, so I won't get into them here.
+A JQ program is a series of filters that data goes through, transforming the input according to the rules of the filter being executed, producing some output that is then passed along to the next filter or presented as the end result. The JQ syntax itself is pretty dense stuff, and the JQG filters are pretty complicated for a JQ newbie like me to understand -- it wasn't at all intuitive to me what was happening and why through most of the steps. I got some elements of the original JQG filter to work through trial and error, without a full understanding of why it did or didn't work as expected, so I wrote this document as much for my own edification as anything else.
+
+The basic syntactical structure of a JQ program, though, is pretty simple. Different filters are separated by a pipe ('`|`') or a comma ('`,`'); the pipe is analogous to a shell pipe, where the output of the first filter is used as the input to the following filter, whereas with the comma, the input to each filter is the same and the output is the concatenation of each filter's results. Collections of filters can be saved off as a named function that can then be used as a filter somewhere else. Function arguments are pretty wonky, but JQG's functions don't use them, so I won't get into them here.
 
 **Hint:** Use the [`jqplay`](https://jqplay.org/) site with the data below to play around with some of the sub-expressions in the filter; it really helps illustrate what each piece of syntax does. In addition, you can add in the `debug` filter at any step to dump out the current input at that moment, which *really* helps illustrate what's happening.
 
 If you find any errors in my explanation, please submit a bug.
 
 *References:*
-[Pipe ('`|`')](https://stedolan.github.io/jq/manual/#Pipe:|),
-[Comma ('`,`')](https://stedolan.github.io/jq/manual/#Comma:,),
-[Defining Functions](https://stedolan.github.io/jq/manual/#DefiningFunctions),
-[`debug`](https://stedolan.github.io/jq/manual/#debug)
+[Pipe ('`|`')](https://jqlang.github.io/jq/manual/#pipe),
+[Comma ('`,`')](https://jqlang.github.io/jq/manual/#comma),
+[Defining Functions](https://jqlang.github.io/jq/manual/#defining-functions),
+[`debug`](https://jqlang.github.io/jq/manual/#debug)
 
 [//]: # (==================================================================)
 
@@ -20,7 +22,7 @@ If you find any errors in my explanation, please submit a bug.
 
 ### JQG Filters
 
-There are four primary filter/functions in the JQG script:
+There are four primary filters/functions in the JQG script:
 
 * [`search_filter`](#search_filter) - filter the input for some criteria; expects flattened input
 * [`flatten_json`](#flatten_json) - flatten the input JSON; expects unflattened input
@@ -30,12 +32,12 @@ There are four primary filter/functions in the JQG script:
 plus a few secondary filters/functions:
 
 * [`empty_leafs`](#empty_leafs) - handle the selection of empty leaf nodes during the flattening process; is only used in conjunction with `flatten_json` and the `-e|--include_empty` JQG command line argument
-* [`require_results`](#require_results) - optionally count the results, halting execution and throwing an error if there are none
-* [`post_process_output`](#post_process_output) - optionally extract just the keys or values from the results object, possibly producing raw output
+* [`require_results`](#require_results) - optionally count the results, halting execution and throwing an error if there are none; is only used in conjunction with the `-N|--results_required` JQG command line argument
+* [`post_process_output`](#post_process_output) - optionally extract just the keys or values from the results object, possibly producing raw output; is only used in conjunction with the `-K|--keys` and `-V|--values` JQG command line argument
 
 Each of the primary and secondary filters are explained in detail in the sections below.
 
-JQG has three major modes (search, unflatten, extract) plus two composite modes (each combining the search mode with one of the other two). Each mode will string a subset of the above filters together in a different order; other command line options can further affect the filters used and the order they're used in, with the remaining options affecting the execution of the filters themselves. This results in zero or more input transformation filters, a main filter, zero or more output transformation filters, and finally an optional filter to post-process the output.
+JQG has three major modes (search, unflatten, extract) plus two composite modes (each combining the search mode with one of the other two). Each mode will string a subset of the above filters together in a different order; other command line options can further affect the filters used and the order they're used in, with the remaining options affecting the execution of the filters themselves. This results in zero or more input transformation filters, a main filter, zero or more output transformation filters, and finally the optional filter to post-process the output.
 
 By default, the different modes produce the following filter lists:
 
@@ -72,11 +74,11 @@ The following command line options modify the filter list:
 
 ### Variables
 
-There are two types of variables used in the annotations below: JQ variables (shown all in lower case, `$like_so`) and BASH variables (shown bolded in upper case, **`$LIKE_SO`**). In the real JQG script, the filter is escaped properly to make it through the shell into JQ, but here it's presented so that you can cut and paste it into [`jqplay`](https://jqplay.org/) as easily as possible. The **`$EMBEDDED_SHELL_VARIABLES`** will cause the `jqplay` tool problems, of course, but just replace as appropriate and you should be good to go (use the JQG `--debug` command-line option to help with this).
+There are two types of variables used in the annotations below: JQ variables (shown all in lower case, `$like_so`) and BASH variables (shown bolded in upper case, **`$LIKE_SO`**). In the real JQG script, the filter is escaped properly to make it through the shell into JQ, but here it's presented so that you can cut and paste it into [`jqplay`](https://jqplay.org/) as easily as possible. Any **`$EMBEDDED_SHELL_VARIABLES`** will cause the `jqplay` tool problems, of course, but just replace as appropriate and you should be good to go (use the JQG `--debug` command-line option to help with this).
 
 ### Example JSON
 
-The explanations below will reference the following JSON snippet:
+Most explanations below will reference the following JSON snippet:
 
 <details>
 <summary>
@@ -120,7 +122,7 @@ There are a handful of JQ filters that I found difficult to understand. They're 
 
 </summary>
 
-The "Variable/Symbolic Binding Operator" is a special construct that loops through each value of `EXPRESSION`, stores that value in the JQ variable `$IDENTIFIER`, and then runs the *entire* filter input through the rest of the pipeline (represented here by "`...`") with `$IDENTIFIER` available/accessible during each iteration. The pipeline can use that original input or not as it likes, and it can use the `$IDENTIFIER` or not as it likes (presumably it's wanted for some purpose, though). If the `EXPRESSION` only produces one value, there's only one iteration through the remainder of the pipeline; this is not unusual. Once the value of `$IDENTIFIER` is set, nothing can change it; this was a source of good bit of confusion for me.
+The "Variable/Symbolic Binding Operator" is a special construct that loops through each value of `EXPRESSION`, stores that value in the JQ variable `$IDENTIFIER`, and then runs the *entire* filter input through the rest of the pipeline (represented here by "`...`") with `$IDENTIFIER` available/accessible during each iteration. The pipeline can use that original input or not as it likes, and it can use the `$IDENTIFIER` or not as it likes (presumably it's wanted for some purpose, though). If the `EXPRESSION` only produces one value, there's only one iteration through the remainder of the pipeline; this is not unusual. Once the value of `$IDENTIFIER` is set, nothing can change it -- this was a source of good bit of confusion for me.
 
 <details>
 <summary>
@@ -129,9 +131,9 @@ The "Variable/Symbolic Binding Operator" is a special construct that loops throu
 
 </summary>
 
-Using the example data above, this a pretty contrived filter that stores the date/time value of the epoch as **`$timestamp`** and then changes the value of all `.color` keys to it:
+Using the example data above, this a pretty contrived filter that stores the date/time value of the epoch as **`$timestamp`** and then changes the value of all `.breed` keys to it:
 
-> Filter: `(0 | todate) as $timestamp | (..|select(has("color"))?) += {color: $timestamp}` produces:
+> Filter: `(0 | todate) as $timestamp | (..|select(has("breed"))?) += {breed: $timestamp}` produces:
 
 ```json
 {
@@ -139,12 +141,12 @@ Using the example data above, this a pretty contrived filter that stores the dat
     "domesticated": [
       {
         "petname": "Fluffy",
-        "breed": "Bengal"
+        "breed": "1970-01-01T00:00:00Z"
       },
       {
         "petname": "Misty",
-        "breed": "domestic short hair",
-        "color": "1970-01-01T00:00:00Z"
+        "breed": "1970-01-01T00:00:00Z",
+        "color": "yellow"
       }
     ]
   }
@@ -154,7 +156,7 @@ Using the example data above, this a pretty contrived filter that stores the dat
 </details>
 
 References:
-[Variable/Symbolic Binding Operator](https://stedolan.github.io/jq/manual/#Variable/SymbolicBindingOperator:...as$identifier|...)
+[Variable/Symbolic Binding Operator](https://jqlang.github.io/jq/manual/#variable-symbolic-binding-operator)
 
 </details>
 
@@ -265,8 +267,8 @@ Assume the following as input:
 If `path` isn't working as you thought it should, my best advice is to play with it on the [`jqplay`](https://jqplay.org/) site.
 
 References:
-[`path`](https://stedolan.github.io/jq/manual/#path(path_expression)),
-[Path Expressions](https://github.com/stedolan/jq/wiki/jq-Language-Description#Path-Expressions)
+[`path`](https://jqlang.github.io/jq/manual/#path),
+[Path Expressions](https://github.com/jqlang/jq/wiki/jq-Language-Description#Path-Expressions)
 
 </details>
 
@@ -283,7 +285,7 @@ References:
 
 </summary>
 
-The `reduce` filter is a looping mechanism that accumulates its output over the course of the loop's execution. The `EXPRESSION` will produce a set of results, each element of which will be iterated over. The accumulated output is initialized with the value of `STARTING VALUE` and `ACCUMULATOR` is evaluated once for each loop iteration, returning an array or object that `reduce` concatenates to or merges with the previous iteration's array or object. This accumulated output is what passes out of the `reduce` filter. During each iteration, the current value of the loop is stored in `$VAR`, and the current value of the accumulated results is stored in `.` (the latter was also a source of confusion for me).
+The `reduce` filter is a looping mechanism that accumulates its output over the course of the loop's execution. The `EXPRESSION` will produce a set of results, each element of which will be iterated over. The accumulated output is initialized with the value of `STARTING VALUE` and the `ACCUMULATOR` filter is evaluated once for each loop iteration, returning an array or object that `reduce` concatenates to or merges with the previous iteration's array or object. This accumulated output is what passes out of the `reduce` filter. During each iteration, the current value of the loop is stored in `$VAR`, and the current value of the accumulated results is stored in `.` (the latter was also a source of confusion for me).
 
 <details>
 <summary>
@@ -361,7 +363,7 @@ Since the first few iterations are for non-leaf nodes, nothing is added to the a
 </details>
 
 References:
-[`reduce`](https://stedolan.github.io/jq/manual/#Reduce)
+[`reduce`](https://jqlang.github.io/jq/manual/#reduce)
 
 </details>
 
@@ -389,7 +391,7 @@ References:
 
 See the [example JSON](#example-json) from above as input.
 
-This selects just the values that contain a capital letter.
+This selects just the leaf node values that contain a capital letter.
 
 > Filter: `[..|scalars|select(test("[A-Z]"))]` produces:
 
@@ -415,7 +417,7 @@ This selects values that do *not* contain a capital letter.
 </details>
 
 References:
-[`select`](https://stedolan.github.io/jq/manual/#select(boolean_expression))
+[`select`](https://jqlang.github.io/jq/manual/#select)
 
 </details>
 
@@ -518,7 +520,7 @@ Replace a value in an object.
 </details>
 
 References:
-[`setpath`](https://stedolan.github.io/jq/manual/#setpath(PATHS;VALUE))
+[`setpath`](https://jqlang.github.io/jq/manual/#setpath)
 
 </details>
 
@@ -587,7 +589,7 @@ Given:
 ```
 
 References:
-[`to_entries`](https://stedolan.github.io/jq/manual/#to_entries,from_entries,with_entries)
+[`to_entries`](https://jqlang.github.io/jq/manual/#to_entries-from_entries-with_entries)
 
 </details>
 
@@ -623,16 +625,16 @@ The "Variable/Symbolic Binding Operator" is a special construct that loops throu
 The use of the binding operator in this filter segment is much simpler, though; because `EXPRESSION` is just '`.`' (the "Identity" operator), there is only one iteration through the loop, with the entire input being stored into a variable called `$data` that can be referenced some time later.
 
 References:
-[Variable/Symbolic Binding Operator](https://stedolan.github.io/jq/manual/#Variable/SymbolicBindingOperator:...as$identifier|...),
-[Identity ('`.`')](https://stedolan.github.io/jq/manual/#Identity:.)
+[Variable/Symbolic Binding Operator](https://jqlang.github.io/jq/manual/#variable-symbolic-binding-operator),
+[Identity ('`.`')](https://jqlang.github.io/jq/manual/#identity)
 
 ---
 
 > **`[ path(.. | select((scalars|tostring), $EMPTY_TESTS)) ] |`**
 
-HERE - fix select comma usage
-
 *see the JQ filter overview above for explanations of: [`path(PATH EXPRESSION)`](#path), [`select(BOOLEAN EXPRESSION)`](#select)*
+
+> > **NOTE:** *this section needs some work -- the `select` with a comma (`,`) in the `BOOLEAN EXPRESSION` needs to be expanded upon*
 
 `path` outputs arrays of strings & numbers describing the paths to the input value matched by the given `PATH EXPRESSION`.
 
@@ -649,14 +651,14 @@ The value of **`$EMPTY_TESTS`** depends on whether or not `-e|--include_empty` o
 Any elements that are selected by the compound `BOOLEAN EXPRESSION` are used individually by `path` to grab the path elements of that element as an array, as described above, e.g. the path elements for `fluffy` and `misty` would be `[ "cat", "domesticated", 0, "petname" ]` and `[ "cat", "domesticated", 1, "petname" ]`, respectively. Finally, the brackets `[ ... ]` that surround the whole thing will take all of the selected results and wrap them in an outer array, creating an array of arrays, e.g. `[[ "cat", "domesticated", 0, "petname" ], [ "cat", "domesticated", 1, "petname" ]]`.
 
 References:
-[`path`](https://stedolan.github.io/jq/manual/#path(path_expression)),
-[Path Expressions](https://github.com/stedolan/jq/wiki/jq-Language-Description#Path-Expressions),
-[Recursive Descent (..)](https://stedolan.github.io/jq/manual/#RecursiveDescent:..),
-[`select`](https://stedolan.github.io/jq/manual/#select(boolean_expression)),
-[Comma ('`,`')](https://stedolan.github.io/jq/manual/#Comma:,),
-[`scalars`](https://stedolan.github.io/jq/manual/#arrays,objects,iterables,booleans,numbers,normals,finites,strings,nulls,values,scalars),
-[`tostring`](https://stedolan.github.io/jq/manual/#tostring),
-[Array Construction](https://stedolan.github.io/jq/manual/#Arrayconstruction:[])
+[`path`](https://jqlang.github.io/jq/manual/#path),
+[Path Expressions](https://github.com/jqlang/jq/wiki/jq-Language-Description#Path-Expressions),
+[Recursive Descent (..)](https://jqlang.github.io/jq/manual/#recursive-descent),
+[`select`](https://jqlang.github.io/jq/manual/#select),
+[Comma ('`,`')](https://jqlang.github.io/jq/manual/#comma),
+[`scalars`](https://jqlang.github.io/jq/manual/#arrays-objects-iterables-booleans-numbers-normals-finites-strings-nulls-values-scalars),
+[`tostring`](https://jqlang.github.io/jq/manual/#tostring),
+[Array Construction](https://jqlang.github.io/jq/manual/#array-construction)
 
 ---
 
@@ -683,13 +685,13 @@ The "value" for the new object is constructed using the expression: `(. as $path
 Putting the key and value expression results together results in something like the following: `{"cat.domesticated.0.petname":"Fluffy"}` -- repeat this for each end node in the JSON input, creating one new object for each iteration, which the `map` collects into an array, and then move on to the next segment.
 
 References:
-[`map`](https://stedolan.github.io/jq/manual/#map(x),map_values(x)),
-[Object Construction](https://stedolan.github.io/jq/manual/#ObjectConstruction:{}),
-[`tostring`](https://stedolan.github.io/jq/manual/#tostring),
-[`join`](https://stedolan.github.io/jq/manual/#join(str)),
-[Variable/Symbolic Binding Operator](https://stedolan.github.io/jq/manual/#Variable/SymbolicBindingOperator:...as$identifier|...),
-[Assignment](https://stedolan.github.io/jq/manual/#Assignment),
-[`getpath`](https://stedolan.github.io/jq/manual/#getpath(PATHS))
+[`map`](https://jqlang.github.io/jq/manual/#map-map_values),
+[Object Construction](https://jqlang.github.io/jq/manual/#object-construction),
+[`tostring`](https://jqlang.github.io/jq/manual/#tostring),
+[`join`](https://jqlang.github.io/jq/manual/#join),
+[Variable/Symbolic Binding Operator](https://jqlang.github.io/jq/manual/#variable-symbolic-binding-operator),
+[Assignment](https://jqlang.github.io/jq/manual/#assignment),
+[`getpath`](https://jqlang.github.io/jq/manual/#getpath)
 
 ---
 
@@ -740,9 +742,9 @@ into this:
 This object is passed out of the `flatten_json` filter.
 
 References:
-[`reduce`](https://stedolan.github.io/jq/manual/#Reduce),
-[Array/Object Value Iterator ('`.[]`')](https://stedolan.github.io/jq/manual/#Array/ObjectValueIterator:.[]),
-[Addition](https://stedolan.github.io/jq/manual/#Addition:+)
+[`reduce`](https://jqlang.github.io/jq/manual/#reduce),
+[Array/Object Value Iterator ('`.[]`')](https://jqlang.github.io/jq/manual/#array-object-value-iterator),
+[Addition](https://jqlang.github.io/jq/manual/#addition)
 
 </details>
 
@@ -775,12 +777,12 @@ def empty_leafs:
 The `tostring` filter will take its input and convert it to a string (if it's not a string already). This string is then passed to a multi-part conditional, comparing the current input ('`.`') with the strings "`{}`" and "`[]`", looking for matches. This function only cares about empty objects (`{}`) and empty arrays (`[]`); those will be selected, anything else will be rejected. Note that JQ's definition of `or` is not quite the same as "or" in most conventional scripting languages; it only returns `true` or `false`, not an actual value, but that's all that's needed here. The JQ definition of `==` requires an exact match of both type and value.
 
 References:
-[`select`](https://stedolan.github.io/jq/manual/#select(boolean_expression)),
-[`tostring`](https://stedolan.github.io/jq/manual/#tostring),
-[Identity ('`.`')](https://stedolan.github.io/jq/manual/#Identity:.),
-[`==`](https://stedolan.github.io/jq/manual/#==,!=),
-[`or`](https://stedolan.github.io/jq/manual/#and/or/not),
-["`or`" versus "`//`"](https://github.com/stedolan/jq/wiki/FAQ#or-versus-)
+[`select`](https://jqlang.github.io/jq/manual/#select),
+[`tostring`](https://jqlang.github.io/jq/manual/#tostring),
+[Identity ('`.`')](https://jqlang.github.io/jq/manual/#identity),
+[`==`](https://jqlang.github.io/jq/manual/#==-!=),
+[`or`](https://jqlang.github.io/jq/manual/#and-or-not),
+["`or`" versus "`//`"](https://github.com/jqlang/jq/wiki/FAQ#or-versus-)
 
 </details>
 
@@ -859,7 +861,7 @@ Running the flattened JSON above through `to_entries` produces the following:
 ```
 
 References:
-[`to_entries`](https://stedolan.github.io/jq/manual/#to_entries,from_entries,with_entries)
+[`to_entries`](https://jqlang.github.io/jq/manual/#to_entries-from_entries-with_entries)
 
 ---
 
@@ -884,12 +886,12 @@ Taken together, `map(select(...))` will iterate over each element of the input a
 The value of the `select()` function here is fairly straightforward. Each key/value object in the input array is run through the filter: one or both elements are pulled out (depending on the value of **`$SEARCH_ELEM`** -- see above), it's converted to a string via `tostring`, then it's matched against the **`$REGEX`** via `test()`, which returns `true` if the regex matches, and `false` if it doesn't; `select()` will pass the input through unchanged if `true`, and toss the input away if `false`.
 
 References:
-[Object Identifier](https://stedolan.github.io/jq/manual/#ObjectIdentifier-Index:.foo,.foo.bar),
-[Array/Object Value Iterator ('`.[]`')](https://stedolan.github.io/jq/manual/#Array/ObjectValueIterator:.[]),
-[`map`](https://stedolan.github.io/jq/manual/#map(x),map_values(x)),
-[`select`](https://stedolan.github.io/jq/manual/#select(boolean_expression)),
-[`tostring`](https://stedolan.github.io/jq/manual/#tostring),
-[`test`](https://stedolan.github.io/jq/manual/#test(val),test(regex;flags))
+[Object Identifier](https://jqlang.github.io/jq/manual/#object-identifier-index),
+[Array/Object Value Iterator ('`.[]`')](https://jqlang.github.io/jq/manual/#array-object-value-iterator),
+[`map`](https://jqlang.github.io/jq/manual/#map-map_values),
+[`select`](https://jqlang.github.io/jq/manual/#select),
+[`tostring`](https://jqlang.github.io/jq/manual/#tostring),
+[`test`](https://jqlang.github.io/jq/manual/#test)
 
 ---
 
@@ -922,7 +924,7 @@ The input to this final filter segment is an array of key/value objects that mat
 This object is passed out of the `search_json` filter.
 
 References:
-[`from_entries`](https://stedolan.github.io/jq/manual/#to_entries,from_entries,with_entries)
+[`from_entries`](https://jqlang.github.io/jq/manual/#to_entries-from_entries-with_entries)
 
 </details>
 
@@ -1051,17 +1053,17 @@ Using the `to_entries` filter produces one array (with two values, each of which
 </details>
 
 References:
-[`reduce`](https://stedolan.github.io/jq/manual/#Reduce),
-[`to_entries`](https://stedolan.github.io/jq/manual/#to_entries,from_entries,with_entries),
-[Array/Object Value Iterator ('`.[]`')](https://stedolan.github.io/jq/manual/#Array/ObjectValueIterator:.[])
+[`reduce`](https://jqlang.github.io/jq/manual/#reduce),
+[`to_entries`](https://jqlang.github.io/jq/manual/#to_entries-from_entries-with_entries),
+[Array/Object Value Iterator ('`.[]`')](https://jqlang.github.io/jq/manual/#array-object-value-iterator)
 
 ---
 
 > **`(null; setpath($entry.key | tostring / "$JOIN_CHAR" | map(tonumber? // .); $entry.value))`**
 
-HERE - tostring
-
 *see the JQ filter overview above for explanations of: [`setpath(PATHS; VALUE)`](#setpath)*
+
+> > **NOTE:** *this section needs some work -- the use of `tostring` is not documented; add `tostring` to references*
 
 `setpath` will set the element described by `PATHS` to `VALUE`, where `PATHS` is an array of strings & numbers describing the element to be set.
 
@@ -1133,13 +1135,13 @@ and so on. This restructured JSON is passed out of the `unflatten_json` filter.
 
 References:
 [`null`](https://www.rfc-editor.org/rfc/rfc8259.html#section-1) (RFC 8259),
-[`setpath`](https://stedolan.github.io/jq/manual/#setpath(PATHS;VALUE)),
-[Slash ('`/`')](https://stedolan.github.io/jq/manual/#Multiplication,division,modulo:*,%2f,and%25),
-[`map`](https://stedolan.github.io/jq/manual/#map(x),map_values(x)),
-[`tonumber`](https://stedolan.github.io/jq/manual/#tonumber),
-[Error Suppression/Optional Operator ('`?`')](https://stedolan.github.io/jq/manual/#ErrorSuppression/OptionalOperator:?),
-[Alternative operator ('`//`')](https://stedolan.github.io/jq/manual/#Alternativeoperator://),
-[Identity ('`.`')](https://stedolan.github.io/jq/manual/#Identity:.)
+[`setpath`](https://jqlang.github.io/jq/manual/#setpath),
+[Slash ('`/`')](https://jqlang.github.io/jq/manual/#multiplication-division-modulo),
+[`map`](https://jqlang.github.io/jq/manual/#map-map_values),
+[`tonumber`](https://jqlang.github.io/jq/manual/#tonumber),
+[Error Suppression/Optional Operator ('`?`')](https://jqlang.github.io/jq/manual/#error-suppression-optional-operator),
+[Alternative operator ('`//`')](https://jqlang.github.io/jq/manual/#alternative-operator),
+[Identity ('`.`')](https://jqlang.github.io/jq/manual/#identity)
 
 </details>
 
@@ -1177,7 +1179,7 @@ The `reduce` filter is a looping mechanism that accumulates its results.
 There's a lot happening inside of `reduce`'s `EXPRESSION`; for now, know that the results are going to be stored in `$selected`.
 
 References:
-[`reduce`](https://stedolan.github.io/jq/manual/#Reduce)
+[`reduce`](https://jqlang.github.io/jq/manual/#reduce)
 
 ---
 
@@ -1299,11 +1301,11 @@ Notice that at the end, all of streamed arrays are one-element arrays, indicatin
 </details>
 
 References:
-[Variable/Symbolic Binding Operator](https://stedolan.github.io/jq/manual/#Variable/SymbolicBindingOperator:...as$identifier|...),
-[`path`](https://stedolan.github.io/jq/manual/#path(path_expression)),
-[`tostream`](https://stedolan.github.io/jq/manual/#tostream),
-[`select`](https://stedolan.github.io/jq/manual/#select(boolean_expression)),
-[Streaming](https://stedolan.github.io/jq/manual/#Streaming)
+[Variable/Symbolic Binding Operator](https://jqlang.github.io/jq/manual/#variable-symbolic-binding-operator),
+[`path`](https://jqlang.github.io/jq/manual/#path),
+[`tostream`](https://jqlang.github.io/jq/manual/#tostream),
+[`select`](https://jqlang.github.io/jq/manual/#select),
+[Streaming](https://jqlang.github.io/jq/manual/#streaming)
 
 ---
 
@@ -1345,12 +1347,12 @@ The input to this segment is a set of arrays composed of one or two elements; th
 The `BOOLEAN EXPRESSION` filter will find the ones being looked for and pass them through, tossing the others aside. The first conditional looks at the size of the input array (via `length`) and looks for ones that are larger than one; they represent the leaf nodes, the ones that have values. The `and` works like a normal boolean operator in that both sides need to be true in order for the whole thing to be true, which is what's needed for `select` to keep it. The second condition grabs the first element of the two-element array, an array of the path elements of the lead node, and looks to see if those path elements match against the extract selector's path elements stored in `$selector_path`. Specifically, it uses `index` to find out *where* it matches, with an index position of 0 indicating that it matched at the beginning of the string. Those elements that meet that criteria are selected and are passed into the `reduce` filter's `ACCUMULATOR` expression.
 
 References:
-[`select`](https://stedolan.github.io/jq/manual/#select(boolean_expression)),
-[`length`](https://stedolan.github.io/jq/manual/#length),
-[`and`](https://stedolan.github.io/jq/manual/#and/or/not),
-[Array Index (`.[0]`)](https://stedolan.github.io/jq/manual/#ArrayIndex:.[2]),
-[`index`](https://stedolan.github.io/jq/manual/#index(s),rindex(s)),
-[`==`](https://stedolan.github.io/jq/manual/#==,!=)
+[`select`](https://jqlang.github.io/jq/manual/#select),
+[`length`](https://jqlang.github.io/jq/manual/#length),
+[`and`](https://jqlang.github.io/jq/manual/#and-or-not),
+[Array Index (`.[0]`)](https://jqlang.github.io/jq/manual/#array-index),
+[`index`](https://jqlang.github.io/jq/manual/#index-rindex),
+[`==`](https://jqlang.github.io/jq/manual/#==-!=)
 
 ---
 
@@ -1379,10 +1381,10 @@ For each iteration, the value of `reduce`'s `EXPRESSION` loop is stored in `$sel
 where the first element of the array is the `PATHS` describing the "where", and the second element is the `VALUE` to be set at that described location. This is done with the `$VAR[x]` phrase, which is just shorthand for `$var | .[x]`, allowing the Array Index to grab the specific array element needed. Here, `setpath` is grabbing the first element of the array (`$selected[0]`) to use as the `PATHS` and then the second element of the array (`$selected[1]`) to use as the value. These individual selected elements are built up into a final, extracted sub-set of the original JSON passed in.
 
 References:
-[`reduce`](https://stedolan.github.io/jq/manual/#Reduce),
+[`reduce`](https://jqlang.github.io/jq/manual/#reduce),
 [`null`](https://www.rfc-editor.org/rfc/rfc8259.html#section-1) (RFC 8259),
-[`setpath`](https://stedolan.github.io/jq/manual/#setpath(PATHS;VALUE)),
-[Array Index (`.[0]`)](https://stedolan.github.io/jq/manual/#ArrayIndex:.[2])
+[`setpath`](https://jqlang.github.io/jq/manual/#setpath),
+[Array Index (`.[0]`)](https://jqlang.github.io/jq/manual/#array-index)
 
 </details>
 
@@ -1412,17 +1414,17 @@ The expected input is an array, an object, or `null`.
 
 > **`if length > 0 then . else (. = "" | halt_error(1)) end;`**
 
-HERE - mention parens?
+> > **NOTE:** *this section needs some work -- might be good to mention how parentheses work*
 
 This uses the `if-then-else` filter which has the form `if A then B elif C else D end`. Both `elif C` and `else D` are independently optional, and `elif C` can be given multiple times. The `length` filter is pretty overloaded, allowing it to be called with any type of input, and is being used to look for an array or object with at least one element. If that's found (i.e. the conditional is true) then this passes along the input unchanged to the next filter (via '`.`'). If it's not found the current input is cleared out by assigning an empty string to it and then execution is halted, setting the exit code of the process to '1'.
 
 References:
 
-[`if-then-else`](https://stedolan.github.io/jq/manual/#if-then-else),
-[`length`](https://stedolan.github.io/jq/manual/#length),
-[Identity ('`.`')](https://stedolan.github.io/jq/manual/#Identity:.),
-[Plain Assignment ('`=`')](https://stedolan.github.io/jq/manual/#Plainassignment:=),
-[`halt_error`](https://stedolan.github.io/jq/manual/#halt_error,halt_error(exit_code))
+[`if-then-else`](https://jqlang.github.io/jq/manual/#if-then-else-end),
+[`length`](https://jqlang.github.io/jq/manual/#length),
+[Identity ('`.`')](https://jqlang.github.io/jq/manual/#identity),
+[Plain Assignment ('`=`')](https://jqlang.github.io/jq/manual/#plain-assignment),
+[`halt_error`](https://jqlang.github.io/jq/manual/#halt_error)
 
 </details>
 
@@ -1463,17 +1465,17 @@ If this filter is present at all, it will always be the final one, coming in aft
 
 > **`$OUTPUT_FILTER | $STRIP_ARRAY`**
 
-The filter itself is very straightforward: the input will be passed through two simple filters. The value of **`$OUTPUT_FILTER`** depends on which of the options are given. If only the keys are wanted (`-K|--keys`), then **`$OUTPUT_FILTER`** is set to `keys_unsorted`, which will pull out all of the keys in the object (without sorting them). If only the values are wanted (`-V|--values`), then **`$OUTPUT_FILTER`** is set to `.[]`, which will pull out all of the values in the object. Both will produce an array of elements.
+> > **NOTE:** *this section needs some work -- the use of `-V` sets **`OUTPUT_FILTER`** to `[ .[] ]`; add array constructor to references*
 
-HERE - actually `[ .[] ]` -- add array constructor in references
+The filter itself is very straightforward: the input will be passed through two simple filters. The value of **`$OUTPUT_FILTER`** depends on which of the options are given. If only the keys are wanted (`-K|--keys`), then **`$OUTPUT_FILTER`** is set to `keys_unsorted`, which will pull out all of the keys in the object (without sorting them). If only the values are wanted (`-V|--values`), then **`$OUTPUT_FILTER`** is set to `.[]`, which will pull out all of the values in the object. Both will produce an array of elements.
 
 If the user has requested "raw output" via the `-r|--raw` option to JQG then **`$STRIP_ARRAY`** will be set to `.[]`, which will remove the outer array from the results. The default value for **`$STRIP_ARRAY`**, though, is `.`, which will just pass the input through unchanged.
 
 References:
-[`keys_unsorted`](https://stedolan.github.io/jq/manual/#keys,keys_unsorted),
-[Array/Object Value Iterator ('`.[]`')](https://stedolan.github.io/jq/manual/#Array/ObjectValueIterator:.[]),
-[raw output](https://stedolan.github.io/jq/manual/#Invokingjq),
-[Identity ('`.`')](https://stedolan.github.io/jq/manual/#Identity:.)
+[`keys_unsorted`](https://jqlang.github.io/jq/manual/#keys-keys_unsorted),
+[Array/Object Value Iterator ('`.[]`')](https://jqlang.github.io/jq/manual/#array-object-value-iterator),
+[raw output](https://jqlang.github.io/jq/manual/#invoking-jq),
+[Identity ('`.`')](https://jqlang.github.io/jq/manual/#identity)
 
 </details>
 
