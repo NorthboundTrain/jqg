@@ -180,3 +180,121 @@ teardown() { load common; common_teardown; }
     ver=$BATS_VERSION
     check_version_number version=$ver target=1.7 action=fail
 }
+
+# check min_jq_ver and max_jq_ver
+@test "max_jq_ver - major OK" {
+    run max_jq_ver major=9 minor=1 patch=1 version=1.9.9
+    assert_success
+}
+
+@test "max_jq_ver - major fail" {
+    run max_jq_ver major=1 minor=9 patch=9 version=9.1.1
+    assert_failure
+}
+
+@test "max_jq_ver - minor OK" {
+    run max_jq_ver major=1 minor=9 patch=1 version=1.1.9
+    assert_success
+}
+
+@test "max_jq_ver - minor fail" {
+    run max_jq_ver major=1 minor=1 patch=9 version=1.9.1
+    assert_failure
+}
+
+@test "max_jq_ver - patch OK" {
+    run max_jq_ver major=1 minor=1 patch=9 version=1.1.1
+    assert_success
+}
+
+@test "max_jq_ver - patch fail" {
+    run max_jq_ver major=1 minor=1 patch=1 version=1.1.9
+    assert_failure
+}
+
+@test "max_jq_ver - tied" {
+    run max_jq_ver major=1 minor=1 patch=1 version=1.1.1
+    assert_success
+}
+
+@test "max_jq_ver - OK patch missing" {
+    run max_jq_ver major=1 minor=1 version=1.1.0
+    assert_success
+}
+
+@test "max_jq_ver - tied patch missing" {
+    run max_jq_ver major=1 minor=1 version=1.1.999
+    assert_success
+}
+
+@test "max_jq_ver - failed patch missing" {
+    run max_jq_ver major=1 minor=1 version=1.1.9999
+    assert_failure
+}
+
+
+@test "min_jq_ver - major OK" {
+    run min_jq_ver major=1 minor=9 patch=9 version=9.1.1
+    assert_success
+}
+
+@test "min_jq_ver - major fail" {
+    run min_jq_ver major=9 minor=1 patch=1 version=1.9.9
+    assert_failure
+}
+
+@test "min_jq_ver - minor OK" {
+    run min_jq_ver major=9 minor=1 patch=9 version=9.9.1
+    assert_success
+}
+
+@test "min_jq_ver - minor fail" {
+    run min_jq_ver major=9 minor=9 patch=1 version=9.1.9
+    assert_failure
+}
+
+@test "min_jq_ver - patch OK" {
+    run min_jq_ver major=9 minor=9 patch=1 version=9.9.9
+    assert_success
+}
+
+@test "min_jq_ver - patch fail" {
+    run min_jq_ver major=9 minor=9 patch=9 version=9.9.1
+    assert_failure
+}
+
+@test "min_jq_ver - tied" {
+    run min_jq_ver major=9 minor=9 patch=9 version=9.9.9
+    assert_success
+}
+
+@test "min_jq_ver - OK patch missing" {
+    run min_jq_ver major=9 minor=9 version=9.9.999
+    assert_success
+}
+
+@test "min_jq_ver - tied patch missing" {
+    run min_jq_ver major=9 minor=9 version=9.9.0
+    assert_success
+}
+
+
+@test "max_jq_ver - actual OK" {
+    run max_jq_ver major=9 minor=9 patch=9
+    assert_success
+}
+
+@test "max_jq_ver - actual fail" {
+    run max_jq_ver major=1 minor=1 patch=1
+    assert_failure
+}
+
+@test "min_jq_ver - actual OK" {
+    run min_jq_ver major=1 minor=1 patch=1
+    assert_success
+}
+
+@test "min_jq_ver - actual fail" {
+    run min_jq_ver major=9 minor=9 patch=9
+    assert_failure
+}

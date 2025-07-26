@@ -161,5 +161,77 @@ EOF
 }
 
 bats_check() {
-    check_version_number version="$BATS_VERSION" target="1.6.0" action="skip" name="Bats"
+    check_version_number version="$BATS_VERSION" target="1.12.0" action="skip" name="Bats"
+}
+
+max_jq_ver() {
+    local major minor patch version
+
+    local "${@}" >/dev/null
+
+    # this will normally be empty
+    if [[ -z "$version" ]]; then
+        version=$( ${JQ_BIN:-jq} --version )
+    fi
+
+    declare -rA velems=$(parse_version_elements version="$version")
+
+    local success=true
+    if [[ ${velems[major]} -gt ${major} ]]; then
+        echo "${velems[major]} > ${major}"
+        success=false
+    elif [[ ${velems[major]} -eq ${major} ]]; then
+        if [[ ${velems[minor]} -gt ${minor} ]]; then
+            echo "${velems[minor]} > ${minor}"
+            success=false
+        elif [[ ${velems[minor]} -eq ${minor} ]]; then
+            if [[ ${velems[patch]} -gt ${patch:-999} ]]; then
+                echo "${velems[patch]} > ${patch}"
+                success=false
+            fi
+        fi
+    fi
+
+    if [[ $success == "true" ]]; then
+        echo "${version} <= ${major}.${minor}.${patch:-999}"
+        return 0
+    else
+        return 1
+    fi
+}
+
+min_jq_ver() {
+    local major minor patch version
+
+    local "${@}" >/dev/null
+
+    # this will normally be empty
+    if [[ -z "$version" ]]; then
+        version=$( ${JQ_BIN:-jq} --version )
+    fi
+
+    declare -rA velems=$(parse_version_elements version="$version")
+
+    local success=true
+    if [[ ${velems[major]} -lt ${major} ]]; then
+        echo "${velems[major]} < ${major}"
+        success=false
+    elif [[ ${velems[major]} -eq ${major} ]]; then
+        if [[ ${velems[minor]} -lt ${minor} ]]; then
+            echo "${velems[minor]} < ${minor}"
+            success=false
+        elif [[ ${velems[minor]} -eq ${minor} ]]; then
+            if [[ ${velems[patch]} -lt ${patch:-0} ]]; then
+                echo "${velems[patch]} < ${patch}"
+                success=false
+            fi
+        fi
+    fi
+
+    if [[ $success == "true" ]]; then
+        echo "${version} >= ${major}.${minor}.${patch:-0}"
+        return 0
+    else
+        return 1
+    fi
 }

@@ -2,7 +2,7 @@
 
 ## `jqg`'s Unit Tests
 
-JQG includes a suite of unit tests to help ensure that future code changes do not break current capabilities. As of this writing, there are 620+ tests that run in 3-4 minutes on my development machine -- not the largest or fastest test suite out there (by a long shot) but it meets the project's needs.
+JQG includes a suite of unit tests to help ensure that future code changes do not break current capabilities. As of this writing, there are 640+ tests that run in 75 seconds on my development machine.
 
 ## Installing `bats`
 
@@ -39,6 +39,9 @@ $ test/bats/bin/bats test/31-jqg-opts-envvar.bats --filter separator
 
 # run using Perl's prove TAP harness (BATS is TAP-compliant)
 $ prove test/*.bats
+
+# run using an older JQ, or if JQ is not on PATH
+$ JQ_BIN=old_jq_bin/jq-1.6 prove test
 ```
 
 ## Benchmarking

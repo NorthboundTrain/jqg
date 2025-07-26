@@ -692,7 +692,6 @@ EOF
 
 # case insensitive multi-string value search with regex override for sub-expression
 @test "case insensitive multi-string value search with regex override for sub-expression" {
-    skip "due to a bug in JQ's Oniguruma library, this requires a post 1.6 JQ build"
     run jqg -v 'f|(?-i:M)' $carnivora_json
     assert_success
     assert_output - <<EOF
@@ -1238,16 +1237,41 @@ null
 EOF
 }
 
-# note: this is broken into two asserts because of a bug in my editor that
-#       strips trailing whitespace even inside of a multi-line string; its
-#       output in jqg-examples.md looks fine, though
-
 # invalid selector
-@test "invalid selector" {
+@test "invalid selector (JQ 1.6 & 1.7)" {
+    #&&& IGNORE START
+    run max_jq_ver major=1 minor=7
+    if [[ $status -ne 0 ]]; then
+        skip "max JQ version of 1.7 required"
+    fi
+    #&&& IGNORE END
     run jqg -x dog $carnivora_json
     assert_failure
     assert_output --partial - <<EOF
-jq: error: dog/0 is not defined at <top-level>, line 7:
+jq: error: dog/0 is not defined at <top-level>, line 7
+EOF
+    assert_output --partial - <<EOF
+    path(dog) as \$selector_path | tostream |
+EOF
+    assert_output --partial - <<EOF
+jq: 1 compile error
+EOF
+}
+
+# invalid selector
+@test "invalid selector (JQ 1.8+)" {
+    #&&& IGNORE START
+    run min_jq_ver major=1 minor=8
+    if [[ $status -ne 0 ]]; then
+        skip "min JQ version of 1.8 required"
+    fi
+    #&&& IGNORE END
+    run jqg -x dog $carnivora_json
+    assert_failure
+    assert_output --partial - <<EOF
+jq: error: dog/0 is not defined at <top-level>, line 7, column 10
+EOF
+    assert_output --partial - <<EOF
     path(dog) as \$selector_path | tostream |
 EOF
     assert_output --partial - <<EOF

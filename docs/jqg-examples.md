@@ -860,10 +860,6 @@ $ jqg -v 'f|M' carnivora.json
 <details>
 <summary>case insensitive multi-string value search with regex override for sub-expression</summary>
 
-<p/>
-
-**Test Skipped:** *due to a bug in JQ's Oniguruma library, this requires a post 1.6 JQ build*
-
 ```bash
 $ jqg -v 'f|(?-i:M)' carnivora.json
 {
@@ -1417,11 +1413,24 @@ null
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>invalid selector</summary>
+<summary>invalid selector (JQ 1.6 & 1.7)</summary>
 
 ```bash
 $ jqg -x dog carnivora.json
-jq: error: dog/0 is not defined at <top-level>, line 7:
+jq: error: dog/0 is not defined at <top-level>, line 7
+    path(dog) as \$selector_path | tostream |
+jq: 1 compile error
+```
+
+</details>
+
+[//]: # (------------------------------------------------------------------)
+<details>
+<summary>invalid selector (JQ 1.8+)</summary>
+
+```bash
+$ jqg -x dog carnivora.json
+jq: error: dog/0 is not defined at <top-level>, line 7, column 10
     path(dog) as \$selector_path | tostream |
 jq: 1 compile error
 ```
