@@ -527,7 +527,7 @@ EOF
     run jqg --debug breed test/carnivora.json
     assert_success
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "test/carnivora.json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "test/carnivora.json"
 
 FILTER:
 def empty_leafs:
