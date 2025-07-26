@@ -173,7 +173,7 @@ References:
 
 </summary>
 
-`path` outputs arrays of strings & numbers describing the paths to the input value matched by the given `PATH EXPRESSION`. Examples of thse path arrays from the sample JSON above would be: `[ "cat" ]`, `[ "cat", "domesticated" ]`, `[ "cat", "domesticated", 0 ]`, `[ "cat", "domesticated", 0, "petname" ]`, `[ "cat", "domesticated", 0, "breed" ]`. These path arrays are produced for each element that makes it through the `PATH EXPRESSION`.
+`path` outputs arrays of strings & numbers describing the paths to the input value matched by the given `PATH EXPRESSION`. Examples of these path arrays from the sample JSON above would be: `[ "cat" ]`, `[ "cat", "domesticated" ]`, `[ "cat", "domesticated", 0 ]`, `[ "cat", "domesticated", 0, "petname" ]`, `[ "cat", "domesticated", 0, "breed" ]`. These path arrays are produced for each element that makes it through the `PATH EXPRESSION`.
 
 The `path` filter is an odd filter. While many JQ filters behave differently depending on the number of arguments passed in, according to the documentation `path` has two completely different modes of operation depending on the *type* of the value in `PATH EXPRESSION`. Kinda sorta.
 

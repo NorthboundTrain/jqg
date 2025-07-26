@@ -5,12 +5,30 @@ All notable changes to this project will be documented in this file.
 The format used here is based upon [Common Changelog](https://common-changelog.org/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) guidelines.
 
+## [1.3.2] - 2025-07-26
+
+### Changed
+
+- ensure that minimal JQ filter is used ([#8][gh-00008])
+- support JQ version-specific unit tests ([#9][gh-00009])
+- allow for use of $JQ_BIN in unit tests ([#10][gh-00010])
+- test all supported JQ versions via GitHub 'push' action ([#11][gh-00011])
+- bump `bats` from 1.7.0 to 1.12.0 (latest)
+- bump `bats-assert` from 2.0.0 to 2.1.0 (latest)
+- bump `bats-file` from 0.3.0 to 0.4.0 (latest)
+- bump `bats-support` to 0.3.0 (latest)
+
+### Fixed
+
+- fix typo in documentation ([#7][gh-00007])
+- fix JQ & JQPlay URLS ([#12][gh-00012])
+
 ## [1.3.1] - 2023-08-27
 
 ### Changed
 
-- change reference URLs from https://stedolan.github.io/jq to https://jqlang.github.io/jq
-- change reference URLs from https://github.com/stedolan/jq/wiki to https://github.com/jqlang/jq/wiki
+- change reference URLs from <https://stedolan.github.io/jq> to <https://jqlang.github.io/jq>
+- change reference URLs from <https://github.com/stedolan/jq/wiki> to <https://github.com/jqlang/jq/wiki>
 
 ### Added
 
@@ -179,6 +197,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [//]: # (RELEASES)
 
+[1.3.2]: https://github.com/NorthboundTrain/jqg/tree/v1.3.2
 [1.3.1]: https://github.com/NorthboundTrain/jqg/tree/v1.3.1
 [1.3.0]: https://github.com/NorthboundTrain/jqg/tree/v1.3.0
 [1.2.2]: https://github.com/NorthboundTrain/jqg/tree/v1.2.2
@@ -199,3 +218,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [gh-00004]: https://github.com/NorthboundTrain/jqg/issues/4
 [gh-00005]: https://github.com/NorthboundTrain/jqg/issues/5
 [gh-00006]: https://github.com/NorthboundTrain/jqg/issues/6
+[gh-00007]: https://github.com/NorthboundTrain/jqg/issues/7
+[gh-00008]: https://github.com/NorthboundTrain/jqg/issues/8
+[gh-00009]: https://github.com/NorthboundTrain/jqg/issues/9
+[gh-00010]: https://github.com/NorthboundTrain/jqg/issues/10
+[gh-00011]: https://github.com/NorthboundTrain/jqg/issues/11
+[gh-00012]: https://github.com/NorthboundTrain/jqg/issues/12

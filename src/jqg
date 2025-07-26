@@ -43,7 +43,7 @@ main() {
     eval set -- "$_getopt"
 
     #***** release version *****
-    local jqg_version="v1.3.0"
+    local jqg_version="v1.3.2"
 
     #***** determine JQ binary *****
     local jq_bin=${JQ_BIN:-jq}

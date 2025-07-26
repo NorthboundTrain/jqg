@@ -684,7 +684,7 @@ $ jqg -v king -K carnivora.json
 
 ```bash
 $ jqg --debug breed test/carnivora.json
-CMDLINE: "jq"   "<FILTER>" < "test/carnivora.json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "test/carnivora.json"
 
 FILTER:
 def empty_leafs:
@@ -859,6 +859,7 @@ $ jqg -v 'f|M' carnivora.json
 [//]: # (------------------------------------------------------------------)
 <details>
 <summary>case insensitive multi-string value search with regex override for sub-expression (JQ 1.7+)</summary>
+
 ```bash
 $ jqg -v 'f|(?-i:M)' carnivora.json
 {
@@ -1679,4 +1680,3 @@ $ jqg -x .dog -t flatten carnivora.json
 
 [Apache-2.0](../LICENSE)<br />
 © 2021 Joseph Casadonte
-
