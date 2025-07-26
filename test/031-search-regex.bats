@@ -132,7 +132,11 @@ EOF
 
 
 @test "case-insensitive two-element value search w/ REGEX override" {
-    skip "due to a bug in JQ's Oniguruma library, this requires a post 1.6 JQ build"
+    run min_jq_ver major=1 minor=7
+    if [[ $status -ne 0 ]]; then
+        skip "min JQ version of 1.7 required"
+    fi
+
     run jqg -v 'f|(?-i:M)' $carnivora_json
     assert_success
     assert_output - <<EOF

@@ -691,7 +691,14 @@ EOF
 
 
 # case insensitive multi-string value search with regex override for sub-expression
-@test "case insensitive multi-string value search with regex override for sub-expression" {
+@test "case insensitive multi-string value search with regex override for sub-expression (JQ 1.7+)" {
+    #&&& IGNORE START
+    run min_jq_ver major=1 minor=7
+    if [[ $status -ne 0 ]]; then
+        skip "min JQ version of 1.7 required"
+    fi
+    #&&& IGNORE END
+
     run jqg -v 'f|(?-i:M)' $carnivora_json
     assert_success
     assert_output - <<EOF

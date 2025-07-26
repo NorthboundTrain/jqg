@@ -858,8 +858,7 @@ $ jqg -v 'f|M' carnivora.json
 
 [//]: # (------------------------------------------------------------------)
 <details>
-<summary>case insensitive multi-string value search with regex override for sub-expression</summary>
-
+<summary>case insensitive multi-string value search with regex override for sub-expression (JQ 1.7+)</summary>
 ```bash
 $ jqg -v 'f|(?-i:M)' carnivora.json
 {
