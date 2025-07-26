@@ -265,6 +265,11 @@ main() {
     #----- add the list of filters -----
     add_filter_list_pipeline
 
+    #----- if all of the above results in nothing, use JQ Identity filter (.) -----
+    if [[ -z "$jq_filter" ]]; then
+        jq_filter=.
+    fi
+
     #***** deal with JQ's -r argument *****
     local raw_arg
     case "$jq_raw" in

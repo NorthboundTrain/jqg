@@ -28,9 +28,10 @@ none_search_none_noop_test()
     run jqg -d -t none -T none $filename
 
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "$filename"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "$filename"
 
 FILTER:
+.
 EOF
 }
 
@@ -86,9 +87,10 @@ EOF
     run jqg -d -T none $carnivora_json
 
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "$carnivora_json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "$carnivora_json"
 
 FILTER:
+.
 EOF
 }
 
@@ -97,9 +99,10 @@ EOF
     run jqg -d -T none . $carnivora_json
 
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "$carnivora_json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "$carnivora_json"
 
 FILTER:
+.
 EOF
 }
 
@@ -108,9 +111,10 @@ EOF
     run jqg -d -x -T none $carnivora_json
 
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "$carnivora_json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "$carnivora_json"
 
 FILTER:
+.
 EOF
 }
 
@@ -119,9 +123,10 @@ EOF
     run jqg -d -x -T none . $carnivora_json
 
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "$carnivora_json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "$carnivora_json"
 
 FILTER:
+.
 EOF
 }
 
@@ -130,9 +135,10 @@ EOF
     run jqg -d -U -t none -T none $carnivora_json
 
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "$carnivora_json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "$carnivora_json"
 
 FILTER:
+.
 EOF
 }
 
@@ -141,9 +147,10 @@ EOF
     run jqg -d -U -t none -T none . $carnivora_json
 
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "$carnivora_json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "$carnivora_json"
 
 FILTER:
+.
 EOF
 }
 
@@ -152,9 +159,10 @@ EOF
     run jqu -d -t none -T none $carnivora_json
 
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "$carnivora_json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "$carnivora_json"
 
 FILTER:
+.
 EOF
 }
 
@@ -163,9 +171,10 @@ EOF
     run jqg -d -X . -T none $carnivora_json
 
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "$carnivora_json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "$carnivora_json"
 
 FILTER:
+.
 EOF
 }
 
@@ -174,9 +183,10 @@ EOF
     run jqg -d -X . -T none . $carnivora_json
 
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "$carnivora_json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "$carnivora_json"
 
 FILTER:
+.
 EOF
 }
 
@@ -185,8 +195,9 @@ EOF
     run jqx . -d -T none $carnivora_json
 
     assert_output - <<EOF
-CMDLINE: "jq"   "<FILTER>" < "$carnivora_json"
+CMDLINE: "${JQ_BIN:-jq}"   "<FILTER>" < "$carnivora_json"
 
 FILTER:
+.
 EOF
 }

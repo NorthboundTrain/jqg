@@ -171,8 +171,9 @@ teardown() { load common; common_teardown; }
 }
 
 @test "check JQ version" {
-    ver=$(jq --version)
+    ver=$(${JQ_BIN:-jq} --version)
     check_version_number version=$ver target=1.6 action=fail
+    echo "# JQ version: <$ver>" >&3
 }
 
 @test "check BATS version" {

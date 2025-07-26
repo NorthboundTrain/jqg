@@ -124,23 +124,23 @@ parse_version_elements()
 
 check_version_number()
 {
-    local version target action name
+    local version minimum action name
     action="fail"
 
     local "${@}" >/dev/null
 
     declare -rA velems=$(parse_version_elements version="$version")
-    declare -rA telems=$(parse_version_elements version="$target")
+    declare -rA melems=$(parse_version_elements version="$minimum")
 
     local success=true
 
-    if [[ ${velems[major]} -lt ${telems[major]} ]]; then
+    if [[ ${velems[major]} -lt ${melems[major]} ]]; then
         success=false
-    elif [[ ${velems[major]} -eq ${telems[major]} ]]; then
-        if [[ ${velems[minor]} -lt ${telems[minor]} ]]; then
+    elif [[ ${velems[major]} -eq ${melems[major]} ]]; then
+        if [[ ${velems[minor]} -lt ${melems[minor]} ]]; then
             success=false
-        elif [[ ${velems[minor]} -eq ${telems[minor]} ]]; then
-            if [[ ${velems[patch]} -lt ${telems[patch]} ]]; then
+        elif [[ ${velems[minor]} -eq ${melems[minor]} ]]; then
+            if [[ ${velems[patch]} -lt ${melems[patch]} ]]; then
                 success=false
             fi
         fi
@@ -150,12 +150,12 @@ check_version_number()
         if [[ "$action" == "fail" ]]; then
             cat <<EOF | fail
 -- insufficient version --
-minimum: $target
+minimum: $minimum
 actual: $version
 --
 EOF
         else
-            skip "Minimum $name version required: $target (actual: $version)"
+            skip "Minimum $name version required: $minimum (actual: $version)"
         fi
     fi
 }
