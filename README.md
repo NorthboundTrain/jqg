@@ -333,7 +333,7 @@ curl -s 'https://api.github.com/repos/NorthboundTrain/jqg' | jqg 'name|count'
 - [jqg.md](docs/jqg.md) - the JQG man page
 - [jqg-examples.md](docs/jqg-examples.md) - an exhaustive look at the different invocation methods as well as each command line option
 - [jqg-filters.md](docs/jqg-filters.md) - all JQG filters fully annotated
-- [runing-tests.md](test/running-tests.md) - information on running the provided unit tests
+- [running-tests.md](test/running-tests.md) - information on running the provided unit tests
 
 ## Version History
 
